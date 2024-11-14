@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Docker Logs Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <%- include('partials/styles') %>
+</head>
+<body class="bg-gray-100">
+  <div class="drawer lg:drawer-open">
+    <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content flex flex-col p-4">
+      <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden mb-4">Open Menu</label>
+      <%- body %>
+    </div> 
+    <div class="drawer-side">
+      <label for="my-drawer-2" class="drawer-overlay"></label> 
+      <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
+        <li><a href="/watcher" class="<%= path === '/watcher' ? 'active' : '' %>">Logs Watcher</a></li>
+        <li><a href="/settings" class="<%= path === '/settings' ? 'active' : '' %>">Settings</a></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

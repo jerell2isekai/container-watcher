@@ -11,10 +11,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "ejs": "^3.1.10",
     "express": "^4.21.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
     "foxnine-monitor": "file:",
     "shelljs": "^0.8.5",
+    "sqlite3": "^5.1.7",
     "ssh2": "^1.16.0"
   }
 }

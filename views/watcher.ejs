@@ -1,0 +1,16 @@
+<%- contentFor('body') %>
+<div class="w-full">
+  <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
+  <div class="mb-4">
+    <% hosts.forEach(host => { %>
+      <button onclick="viewLogs('<%= host.name %>')" class="btn btn-primary mr-2">
+        <%= host.name %>
+      </button>
+    <% }); %>
+  </div>
+  <div class="container">
+    <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-[600px] overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
+  </div>
+</div>
+
+<%- include('partials/logs-script') %>
