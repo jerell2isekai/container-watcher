@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  container-watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: container-watcher
+    ports:
+      - "9909:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Taipei
+    restart: unless-stopped
+    networks:
+      - container-watcher-net
+
+networks:
+  container-watcher-net:
+    driver: bridge

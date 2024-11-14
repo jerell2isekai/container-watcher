@@ -1,0 +1,98 @@
+<%- contentFor('body') %>
+<div class="w-full">
+  <h1 class="text-3xl font-bold mb-4">Subaccount Management</h1>
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <!-- 新增子帳號表單 -->
+      <form id="operatorForm" action="/settings/operators" method="POST" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input type="text" name="username" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input type="password" name="password" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control mt-6">
+          <button class="btn btn-primary">Add Subaccount</button>
+        </div>
+      </form>
+
+      <!-- 子帳號列表 -->
+      <div class="divider">Created Subaccounts</div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% operators.forEach(function(operator) { %>
+              <tr>
+                <td><%= operator.username %></td>
+                <td><%= new Date(operator.created_at).toLocaleString() %></td>
+                <td class="space-x-2">
+                  <button class="btn btn-sm btn-info" onclick="openChangePasswordModal('<%= operator.id %>', '<%= operator.username %>')">Change Password</button>
+                  <button class="btn btn-sm btn-error" onclick="confirmDelete('<%= operator.id %>', '<%= operator.username %>')">Delete</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 變更密碼 Modal -->
+<dialog id="changePasswordModal" class="modal">
+  <form method="POST" action="/settings/operators/change-password" class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Change Password</h3>
+    <input type="hidden" name="operatorId" id="changePasswordOperatorId">
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">New Password</span>
+      </label>
+      <input type="password" name="newPassword" class="input input-bordered" required>
+    </div>
+    <div class="modal-action">
+      <button type="submit" class="btn btn-primary">Confirm</button>
+      <button type="button" class="btn" onclick="closeChangePasswordModal()">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+function openChangePasswordModal(id, username) {
+  const modal = document.getElementById('changePasswordModal');
+  document.getElementById('changePasswordOperatorId').value = id;
+  modal.showModal();
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').close();
+}
+
+function confirmDelete(id, username) {
+  if (confirm(`Are you sure you want to delete operator ${username}?`)) {
+    fetch(`/settings/operators/${id}`, {
+      method: 'DELETE',
+    }).then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('Delete failed');
+      }
+    });
+  }
+}
+</script>

@@ -1,0 +1,111 @@
+<%- contentFor('body') %>
+<div class="w-full">
+  <h1 class="text-3xl font-bold mb-4">Settings</h1>
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">Container Settings</h2>
+        <div class="flex gap-2">
+          <select id="containerSelect" class="select select-bordered">
+            <option value="">Select Container</option>
+            <% containers.forEach(function(container) { %>
+              <option value="<%= container.id %>"><%= container.host_name %></option>
+            <% }); %>
+          </select>
+          <button id="btnNew" class="btn btn-primary">Add Container</button>
+        </div>
+      </div>
+
+      <form id="containerForm" action="/settings/container" method="POST" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host IP</span>
+          </label>
+          <input type="text" name="host" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Container Name</span>
+          </label>
+          <input type="text" name="container_name" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host Name</span>
+          </label>
+          <input type="text" name="host_name" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SSH Key</span>
+          </label>
+          <textarea name="ssh_key" class="textarea textarea-bordered h-24" required></textarea>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Tags (comma separated)</span>
+          </label>
+          <input type="text" name="tags" class="input input-bordered" placeholder="e.g: prod,api,web">
+        </div>
+        
+        <div class="form-control mt-6">
+          <button class="btn btn-primary">Add Container</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const containerSelect = document.getElementById('containerSelect');
+const containerForm = document.getElementById('containerForm');
+const btnNew = document.getElementById('btnNew');
+
+// Container data list
+const containers = <%- JSON.stringify(containers) %>;
+
+// Fill form when container is selected
+containerSelect.addEventListener('change', function() {
+  const selectedId = this.value;
+  if (!selectedId) {
+    resetForm();
+    return;
+  }
+  
+  const container = containers.find(c => c.id == selectedId);
+  if (container) {
+    fillForm(container);
+  }
+});
+
+// Click add button
+btnNew.addEventListener('click', function() {
+  containerSelect.value = '';
+  resetForm();
+});
+
+// Fill form
+function fillForm(container) {
+  const fields = ['host', 'container_name', 'host_name', 'ssh_key', 'tags'];
+  fields.forEach(field => {
+    const input = containerForm.elements[field];
+    if (input) {
+      // Ensure correct handling even if tags is null or undefined
+      input.value = container[field] || '';
+    }
+  });
+  
+  // For debugging
+  console.log('Container data:', container);
+  console.log('Tags value:', container.tags);
+}
+
+// Reset form
+function resetForm() {
+  containerForm.reset();
+}
+</script>

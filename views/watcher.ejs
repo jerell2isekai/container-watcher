@@ -1,0 +1,134 @@
+<%- contentFor('body') %>
+<div class="w-full h-full">
+  <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
+  
+  <!-- Selectors in flex container -->
+  <div class="flex gap-4 mb-4">
+    <!-- Tag filter -->
+    <div>
+      <select id="tagFilter" class="select select-bordered w-48" onchange="filterHosts()">
+        <option value="">All Tags</option>
+        <% if (Array.isArray(tags)) { %>
+          <% tags.forEach(tag => { %>
+            <option value="<%= tag %>"><%= tag %></option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+
+    <!-- Container selector -->
+    <div>
+      <select id="hostSelect" class="select select-bordered w-96" onchange="onHostSelect(this.value)">
+        <option value="">Select Container</option>
+        <% if (Array.isArray(hosts) && hosts.length > 0) { %>
+          <% hosts.forEach(host => { %>
+            <option value="<%= host.host_name %>" 
+                    data-tags="<%= host.tags %>"
+                    data-container="<%= host.container_name %>"
+                    data-host="<%= host.host %>">
+              <%= host.container_name %> (<%= host.host %>)
+              <% if (host.tags) { %>
+                [<%= host.tags %>]
+              <% } %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+  </div>
+
+  <div class="container h-[calc(100vh-12rem)]">
+    <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-full overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
+  </div>
+</div>
+
+<script>
+let currentEventSource = null;
+
+// Filter container options by tag
+function filterHosts() {
+  const tagFilter = document.getElementById('tagFilter');
+  const hostSelect = document.getElementById('hostSelect');
+  const selectedTag = tagFilter.value;
+  
+  Array.from(hostSelect.options).forEach(option => {
+    if (option.value === '') return; // Skip default option
+    
+    const hostTags = option.getAttribute('data-tags');
+    if (!selectedTag || hostTags?.includes(selectedTag)) {
+      option.style.display = '';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+  
+  // Reset selection if the currently selected option is hidden
+  if (hostSelect.selectedOptions[0].style.display === 'none') {
+    hostSelect.value = '';
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      document.getElementById('log').innerHTML = '';
+    }
+  }
+}
+
+// Trigger log viewing when container is selected
+function onHostSelect(hostName) {
+  if (!hostName) {
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      document.getElementById('log').innerHTML = '';
+    }
+    return;
+  }
+  viewLogs(hostName);
+}
+
+function viewLogs(hostName) {
+  const logElement = document.getElementById('log');
+  logElement.innerHTML = 'Connecting...';
+  
+  // Close existing connection if any
+  if (currentEventSource) {
+    currentEventSource.close();
+  }
+  
+  // Use new API path
+  const eventSource = new EventSource(`/api/container/logs?host=${encodeURIComponent(hostName)}`, {
+    withCredentials: true
+  });
+  
+  currentEventSource = eventSource;
+  
+  eventSource.onmessage = function(event) {
+    if (logElement.innerHTML === 'Connecting...') {
+      logElement.innerHTML = '';
+    }
+    const newLog = document.createElement('div');
+    newLog.innerHTML = event.data; // Use innerHTML to support coloring
+    logElement.appendChild(newLog);
+    
+    // Scroll to bottom
+    logElement.scrollTop = logElement.scrollHeight;
+  };
+  
+  eventSource.onerror = function(error) {
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      logElement.innerHTML += '<div class="text-red-500">Connection closed</div>';
+    }
+  };
+}
+
+// Clean up connection on page unload
+window.addEventListener('beforeunload', () => {
+  if (currentEventSource) {
+    currentEventSource.close();
+  }
+});
+</script>
+
+<%- include('partials/logs-script') %>

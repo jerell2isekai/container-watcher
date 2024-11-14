@@ -1,0 +1,102 @@
+<%- contentFor('body') %>
+<div class="w-full">
+  <h1 class="text-3xl font-bold mb-4">Modify Container</h1>
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <select id="containerSelect" class="select select-bordered w-full max-w-xs">
+          <option value="">Select container to modify</option>
+          <% containers.forEach(function(container) { %>
+            <option value="<%= container.id %>"><%= container.host_name %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <form id="containerForm" action="/settings/container/update" method="POST" class="space-y-4">
+        <input type="hidden" name="id" id="containerId">
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host IP</span>
+          </label>
+          <input type="text" name="host" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Container Name</span>
+          </label>
+          <input type="text" name="container_name" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host Name</span>
+          </label>
+          <input type="text" name="host_name" class="input input-bordered" required>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input type="text" name="username" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SSH Key</span>
+          </label>
+          <textarea name="ssh_key" class="textarea textarea-bordered h-24" required></textarea>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Tags (comma separated)</span>
+          </label>
+          <input type="text" name="tags" class="input input-bordered" placeholder="e.g.: prod,api,web">
+        </div>
+        
+        <div class="form-control mt-6">
+          <button type="submit" class="btn btn-primary" disabled id="submitBtn">Update Container</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const containerSelect = document.getElementById('containerSelect');
+const containerForm = document.getElementById('containerForm');
+const containerId = document.getElementById('containerId');
+const submitBtn = document.getElementById('submitBtn');
+const containers = <%- JSON.stringify(containers) %>;
+
+// 選擇容器時填充表單
+containerSelect.addEventListener('change', function() {
+  const selectedId = this.value;
+  if (!selectedId) {
+    containerForm.reset();
+    submitBtn.disabled = true;
+    return;
+  }
+  
+  const container = containers.find(c => c.id == selectedId);
+  if (container) {
+    fillForm(container);
+    submitBtn.disabled = false;
+  }
+});
+
+// 填充表單
+function fillForm(container) {
+  containerId.value = container.id;
+  const fields = ['host', 'container_name', 'host_name', 'username', 'ssh_key', 'tags']; // 添加 username
+  fields.forEach(field => {
+    const input = containerForm.elements[field];
+    if (input) {
+      input.value = container[field] || '';
+    }
+  });
+}
+</script>
