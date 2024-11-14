@@ -123,17 +123,19 @@ function verifyUser(username, password) {
             if (row) {
                 const isValid = bcrypt.compareSync(password, row.password);
                 const role = isValid ? 'admin' : null;
-                console.log('Admin verify result:', { username, isValid, role });
-                return resolve({ isValid, role });
+                // 檢查是否為預設密碼
+                const isDefaultPassword = isValid && password === 'admin';
+                console.log('Admin verify result:', { username, isValid, role, isDefaultPassword });
+                return resolve({ isValid, role, isDefaultPassword });
             }
             // 檢查 operator 用戶
             db.get("SELECT * FROM operators WHERE username = ?", [username], (err, row) => {
                 if (err) return reject(err);
-                if (!row) return resolve({ isValid: false, role: null });
+                if (!row) return resolve({ isValid: false, role: null, isDefaultPassword: false });
                 const isValid = bcrypt.compareSync(password, row.password);
                 const role = isValid ? 'operator' : null;
                 console.log('Operator verify result:', { username, isValid, role });
-                resolve({ isValid, role });
+                resolve({ isValid, role, isDefaultPassword: false });
             });
         });
     });
@@ -143,6 +145,29 @@ function verifyUser(username, password) {
 function resetAdmin() {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync("admin", 10);
+        db.run("DELETE FROM users WHERE username = ?", ["admin"], (err) => {
+            if (err) {
+                console.error('Delete admin error:', err);
+                reject(err);
+                return;
+            }
+            db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
+                ["admin", hashedPassword], (err) => {
+                    if (err) {
+                        console.error('Insert admin error:', err);
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
+        });
+    });
+}
+
+// 使用新密碼重設管理員密碼
+function resetAdminWithNewPassword(newPassword) {
+    return new Promise((resolve, reject) => {
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
         db.run("DELETE FROM users WHERE username = ?", ["admin"], (err) => {
             if (err) {
                 console.error('Delete admin error:', err);
@@ -304,6 +329,7 @@ module.exports = {
     initDatabase,
     verifyUser,
     resetAdmin,  // 導出重設函數
+    resetAdminWithNewPassword,
     addContainer,
     getAllContainers,
     getContainer,

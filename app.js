@@ -96,15 +96,3 @@ const saveSession = (req) => {
     });
   });
 };
-
-// 移除這個重複的登入處理
-// app.post('/login', async (req, res) => { ... });
-
-// 移除重複的全域變數中間件
-// app.use((req, res, next) => {
-//   res.locals.path = req.path;
-//   res.locals.user = {
-//     role: req.session.role || 'guest'
-//   };
-//   next();
-// });

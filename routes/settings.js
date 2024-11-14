@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { addContainer, getAllContainers, updateContainer, addOperator, getAllOperators, updateOperatorPassword, deleteOperator } = require('../models/database');
+const { 
+  addContainer, 
+  getAllContainers, 
+  updateContainer, 
+  addOperator, 
+  getAllOperators, 
+  updateOperatorPassword, 
+  deleteOperator,
+  resetAdminWithNewPassword  // 新增這行
+} = require('../models/database');
 
 // 管理員權限中間件
 const adminRequired = (req, res, next) => {
@@ -84,6 +93,37 @@ router.post('/container/update', async (req, res) => {
   } catch (error) {
     console.error('Error updating container:', error); // 新增詳細錯誤日誌
     res.status(500).send(`Error updating container: ${error.message}`);
+  }
+});
+
+// 管理員設定頁面
+router.get('/admin', adminRequired, (req, res) => {
+  res.render('settings/admin', {
+    path: '/settings/admin',
+    firstLogin: req.query.firstLogin === '1'
+  });
+});
+
+// 重設管理員密碼
+router.post('/admin/reset-password', adminRequired, async (req, res) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
+    
+    // 驗證密碼
+    if (!newPassword || newPassword.length < 5) {
+      return res.redirect('/settings/admin?error=密碼長度至少需要5個字元');
+    }
+    
+    if (newPassword !== confirmPassword) {
+      return res.redirect('/settings/admin?error=兩次輸入的密碼不相同');
+    }
+
+    await resetAdminWithNewPassword(newPassword);
+    // 直接導向登出
+    res.redirect('/logout');
+  } catch (error) {
+    console.error('變更管理員密碼失敗:', error);
+    res.redirect('/settings/admin?error=變更管理員密碼失敗');
   }
 });
 
