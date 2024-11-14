@@ -38,10 +38,35 @@ function initDatabase() {
         host TEXT NOT NULL,
         container_name TEXT NOT NULL,
         host_name TEXT NOT NULL,
+        username TEXT NOT NULL DEFAULT 'root',  // 設定預設值為 'root'
         ssh_key TEXT NOT NULL,
         tags TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`;
+
+    // 檢查是否需要更新表結構
+    const updateContainersTable = () => {
+        return new Promise((resolve, reject) => {
+            db.get("PRAGMA table_info(containers)", (err, rows) => {
+                if (err) return reject(err);
+
+                // 檢查是否已存在 username 欄位
+                db.get("SELECT * FROM sqlite_master WHERE type='table' AND name='containers' AND sql LIKE '%username%'", (err, row) => {
+                    if (err) return reject(err);
+                    if (!row) {
+                        // 新增 username 欄位
+                        db.run("ALTER TABLE containers ADD COLUMN username TEXT NOT NULL DEFAULT 'root'", (err) => {
+                            if (err) return reject(err);
+                            console.log('Added username column to containers table');
+                            resolve();
+                        });
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        });
+    };
 
     const setupAdminUser = () => {
         return new Promise((resolve, reject) => {
@@ -69,6 +94,7 @@ function initDatabase() {
     // 檢查並創建 users 表
     return checkAndCreateTable('users', usersSchema)
         .then(() => checkAndCreateTable('containers', containersSchema)) // 檢查並創建 containers 表
+        .then(() => updateContainersTable())  // 新增更新表結構的步驟
         .then(setupAdminUser)
         .then(() => {
             console.log('Database initialization completed');
@@ -118,12 +144,13 @@ function resetAdmin() {
 function addContainer(container) {
     return new Promise((resolve, reject) => {
         db.run(
-            `INSERT INTO containers (host, container_name, host_name, ssh_key, tags) 
-             VALUES (?, ?, ?, ?, ?)`,
+            `INSERT INTO containers (host, container_name, host_name, username, ssh_key, tags) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 container.host, 
                 container.container_name, 
-                container.host_name, 
+                container.host_name,
+                container.username,  // 新增字段
                 container.ssh_key,
                 container.tags
             ],
@@ -170,12 +197,13 @@ function updateContainer(id, container) {
     return new Promise((resolve, reject) => {
         db.run(
             `UPDATE containers 
-             SET host = ?, container_name = ?, host_name = ?, ssh_key = ?, tags = ?
+             SET host = ?, container_name = ?, host_name = ?, username = ?, ssh_key = ?, tags = ?
              WHERE id = ?`,
             [
                 container.host,
                 container.container_name,
                 container.host_name,
+                container.username,  // 新增字段
                 container.ssh_key,
                 container.tags,
                 id

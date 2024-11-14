@@ -114,7 +114,7 @@ router.get('/logs', async (req, res) => {
     conn.connect({
       host: container.host,
       port: 22,
-      username: process.env.SSH_USER || 'root',
+      username: container.username, // 改用容器配置的 username
       privateKey: container.ssh_key
     });
   } catch (error) {

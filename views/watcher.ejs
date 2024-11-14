@@ -1,43 +1,92 @@
 <%- contentFor('body') %>
-<div class="w-full">
+<div class="w-full h-full">
   <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
   
-  <!-- 新增標籤篩選器 -->
-  <div class="mb-4">
-    <select id="tagFilter" class="select select-bordered w-full max-w-xs" onchange="filterByTag(this.value)">
-      <option value="">所有標籤</option>
-      <% if (Array.isArray(tags)) { %>
-        <% tags.forEach(tag => { %>
-          <option value="<%= tag %>"><%= tag %></option>
-        <% }); %>
-      <% } %>
-    </select>
+  <!-- 將選擇器包在 flex 容器中 -->
+  <div class="flex gap-4 mb-4">
+    <!-- 標籤篩選器 -->
+    <div>
+      <select id="tagFilter" class="select select-bordered w-48" onchange="filterHosts()">
+        <option value="">所有標籤</option>
+        <% if (Array.isArray(tags)) { %>
+          <% tags.forEach(tag => { %>
+            <option value="<%= tag %>"><%= tag %></option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+
+    <!-- 容器選擇器 -->
+    <div>
+      <select id="hostSelect" class="select select-bordered w-96" onchange="onHostSelect(this.value)">
+        <option value="">選擇容器</option>
+        <% if (Array.isArray(hosts) && hosts.length > 0) { %>
+          <% hosts.forEach(host => { %>
+            <option value="<%= host.host_name %>" 
+                    data-tags="<%= host.tags %>"
+                    data-container="<%= host.container_name %>"
+                    data-host="<%= host.host %>">
+              <%= host.container_name %> (<%= host.host %>)
+              <% if (host.tags) { %>
+                [<%= host.tags %>]
+              <% } %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
   </div>
 
-  <div class="mb-4" id="hostButtons">
-    <% if (Array.isArray(hosts) && hosts.length > 0) { %>
-      <% hosts.forEach(host => { %>
-        <button onclick="viewLogs('<%= host.host_name %>')" 
-                class="btn btn-primary mr-2 mb-2 host-button"
-                data-tags="<%= host.tags %>">
-          <%= host.container_name %> (<%= host.host %>)
-          <% if (host.tags) { %>
-            <span class="ml-2 text-xs bg-base-200 px-2 py-1 rounded-full text-white">
-              <%= host.tags %>
-            </span>
-          <% } %>
-        </button>
-      <% }); %>
-    <% } %>
-  </div>
-
-  <div class="container">
-    <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-[600px] overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
+  <div class="container h-[calc(100vh-12rem)]">
+    <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-full overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
   </div>
 </div>
 
 <script>
 let currentEventSource = null;
+
+// 根據標籤篩選容器選項
+function filterHosts() {
+  const tagFilter = document.getElementById('tagFilter');
+  const hostSelect = document.getElementById('hostSelect');
+  const selectedTag = tagFilter.value;
+  
+  Array.from(hostSelect.options).forEach(option => {
+    if (option.value === '') return; // 跳過預設選項
+    
+    const hostTags = option.getAttribute('data-tags');
+    if (!selectedTag || hostTags?.includes(selectedTag)) {
+      option.style.display = '';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+  
+  // 如果當前選中的選項被隱藏了，重置選擇
+  if (hostSelect.selectedOptions[0].style.display === 'none') {
+    hostSelect.value = '';
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      document.getElementById('log').innerHTML = '';
+    }
+  }
+}
+
+// 當選擇容器時觸發日誌查看
+function onHostSelect(hostName) {
+  if (!hostName) {
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      document.getElementById('log').innerHTML = '';
+    }
+    return;
+  }
+  viewLogs(hostName);
+}
+
+// 原有的 viewLogs 功能保持不變
 function viewLogs(hostName) {
   console.log('Viewing logs for host:', hostName); // 新增除錯日誌
   const logElement = document.getElementById('log');
@@ -83,18 +132,6 @@ window.addEventListener('beforeunload', () => {
     currentEventSource.close();
   }
 });
-
-function filterByTag(selectedTag) {
-  const buttons = document.querySelectorAll('.host-button');
-  buttons.forEach(button => {
-    const buttonTags = button.getAttribute('data-tags');
-    if (!selectedTag || buttonTags === selectedTag) {
-      button.style.display = '';
-    } else {
-      button.style.display = 'none';
-    }
-  });
-}
 </script>
 
 <%- include('partials/logs-script') %>

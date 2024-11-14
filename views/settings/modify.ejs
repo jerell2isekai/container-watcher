@@ -35,6 +35,13 @@
           </label>
           <input type="text" name="host_name" class="input input-bordered" required>
         </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input type="text" name="username" class="input input-bordered" required>
+        </div>
         
         <div class="form-control">
           <label class="label">
@@ -84,7 +91,7 @@ containerSelect.addEventListener('change', function() {
 // 填充表單
 function fillForm(container) {
   containerId.value = container.id;
-  const fields = ['host', 'container_name', 'host_name', 'ssh_key', 'tags'];
+  const fields = ['host', 'container_name', 'host_name', 'username', 'ssh_key', 'tags']; // 添加 username
   fields.forEach(field => {
     const input = containerForm.elements[field];
     if (input) {
