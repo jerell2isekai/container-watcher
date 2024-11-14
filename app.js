@@ -12,15 +12,19 @@ app.use(express.json());
 
 // 路由
 const indexRouter = require('./routes/index');
-const watcherRouter = require('./routes/watcher');
+const { router: watcherRouter } = require('./routes/watcher');
 const settingsRouter = require('./routes/settings');
+const apiRouter = require('./routes/api');
 
 // Session 配置
 app.use(session({
-  secret: 'your-secret-key',
+  secret: '83D1BED6DD337737C3511F41E689A',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: false,  // 在開發環境中設為 false
+    maxAge: 24 * 60 * 60 * 1000 // 24小時
+  }
 }));
 
 // 初始化資料庫
@@ -57,8 +61,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// 路由中間件
-app.use('/', indexRouter);  // 這會處理 /login 和 /logout
+// API 路由配置 (移除舊的配置)
+app.use('/api/container', authMiddleware, apiRouter);
+
+// 頁面路由配置
+app.use('/', indexRouter);
 app.use('/watcher', authMiddleware, watcherRouter);
 app.use('/settings', authMiddleware, settingsRouter);
 

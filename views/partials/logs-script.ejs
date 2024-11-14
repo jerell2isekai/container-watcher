@@ -122,18 +122,30 @@
   
   function viewLogs(host) {
     const logDiv = document.getElementById('log');
-    logDiv.innerHTML = '';
+    logDiv.innerHTML = '正在連接...';
     
-    const source = new EventSource(`/logs?host=${encodeURIComponent(host)}`);
+    // 如果已有連接，先關閉舊的
+    if (window.currentEventSource) {
+      window.currentEventSource.close();
+    }
+    
+    // 使用新的 API 路徑
+    const source = new EventSource(`/api/container/logs?host=${encodeURIComponent(host)}`, {
+      withCredentials: true
+    });
+    window.currentEventSource = source;
+    
     source.onmessage = function(event) {
       const newLog = document.createElement('div');
       newLog.innerHTML = colorizeLogMessage(event.data);
       logDiv.appendChild(newLog);
       
+      // 限制日誌數量
       while (logDiv.children.length > 1000) {
         logDiv.removeChild(logDiv.firstChild);
       }
       
+      // 自動滾動到底部
       if (logDiv.scrollTop + logDiv.clientHeight >= logDiv.scrollHeight - 100) {
         logDiv.scrollTop = logDiv.scrollHeight;
       }
@@ -142,6 +154,15 @@
     source.onerror = function(event) {
       console.error('EventSource failed:', event);
       source.close();
+      window.currentEventSource = null;
+      logDiv.innerHTML += '<div style="color: #ff4444">連接已關閉</div>';
     };
   }
+
+  // 在頁面卸載時清理連接
+  window.addEventListener('beforeunload', () => {
+    if (window.currentEventSource) {
+      window.currentEventSource.close();
+    }
+  });
 </script>

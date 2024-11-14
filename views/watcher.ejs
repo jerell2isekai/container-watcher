@@ -13,4 +13,48 @@
   </div>
 </div>
 
+<script>
+let currentEventSource = null;
+
+function viewLogs(hostName) {
+  const logElement = document.getElementById('log');
+  logElement.innerHTML = '正在連接...';
+  
+  // 如果已有連接，先關閉
+  if (currentEventSource) {
+    currentEventSource.close();
+  }
+  
+  // 使用新的 API 路徑
+  const eventSource = new EventSource(`/api/logs?host=${encodeURIComponent(hostName)}`, {
+    withCredentials: true
+  });
+  
+  currentEventSource = eventSource;
+  
+  eventSource.onmessage = function(event) {
+    if (logElement.innerHTML === '正在連接...') {
+      logElement.innerHTML = '';
+    }
+    const newLog = document.createElement('div');
+    newLog.textContent = event.data;
+    logElement.appendChild(newLog);
+    logElement.scrollTop = logElement.scrollHeight;
+  };
+  
+  eventSource.onerror = function(error) {
+    console.error('EventSource failed:', error);
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+      if (logElement.innerHTML === '正在連接...') {
+        logElement.innerHTML = '連接失敗';
+      } else {
+        logElement.innerHTML += '\n連接已關閉';
+      }
+    }
+  };
+}
+</script>
+
 <%- include('partials/logs-script') %>
