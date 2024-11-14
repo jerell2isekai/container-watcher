@@ -275,6 +275,31 @@ function getAllOperators() {
     });
 }
 
+// 更新操作員密碼
+function updateOperatorPassword(id, newPassword) {
+    return new Promise((resolve, reject) => {
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        db.run(
+            "UPDATE operators SET password = ? WHERE id = ?",
+            [hashedPassword, id],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.changes);
+            }
+        );
+    });
+}
+
+// 刪除操作員
+function deleteOperator(id) {
+    return new Promise((resolve, reject) => {
+        db.run("DELETE FROM operators WHERE id = ?", [id], function(err) {
+            if (err) reject(err);
+            else resolve(this.changes);
+        });
+    });
+}
+
 module.exports = {
     initDatabase,
     verifyUser,
@@ -286,4 +311,6 @@ module.exports = {
     updateContainer,  // 添加這行
     addOperator,
     getAllOperators,
+    updateOperatorPassword,
+    deleteOperator,
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addContainer, getAllContainers, updateContainer, addOperator, getAllOperators } = require('../models/database');
+const { addContainer, getAllContainers, updateContainer, addOperator, getAllOperators, updateOperatorPassword, deleteOperator } = require('../models/database');
 
 // 管理員權限中間件
 const adminRequired = (req, res, next) => {
@@ -103,6 +103,33 @@ router.post('/operators', adminRequired, async (req, res) => {
     res.redirect('/settings/operators');
   } catch (error) {
     res.status(500).send('Error adding operator');
+  }
+});
+
+// 更新操作員密碼
+router.post('/operators/change-password', adminRequired, async (req, res) => {
+  try {
+    const { operatorId, newPassword } = req.body;
+    await updateOperatorPassword(operatorId, newPassword);
+    res.redirect('/settings/operators');
+  } catch (error) {
+    console.error('密碼更新失敗:', error);
+    res.status(500).send('密碼更新失敗');
+  }
+});
+
+// 刪除操作員
+router.delete('/operators/:id', adminRequired, async (req, res) => {
+  try {
+    const result = await deleteOperator(req.params.id);
+    if (result === 0) {
+      res.status(404).send('操作員不存在');
+    } else {
+      res.sendStatus(200);
+    }
+  } catch (error) {
+    console.error('刪除操作員失敗:', error);
+    res.status(500).send('刪除操作員失敗');
   }
 });
 

@@ -32,6 +32,7 @@
             <tr>
               <th>Username</th>
               <th>建立時間</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -39,6 +40,10 @@
               <tr>
                 <td><%= operator.username %></td>
                 <td><%= new Date(operator.created_at).toLocaleString() %></td>
+                <td class="space-x-2">
+                  <button class="btn btn-sm btn-info" onclick="openChangePasswordModal('<%= operator.id %>', '<%= operator.username %>')">變更密碼</button>
+                  <button class="btn btn-sm btn-error" onclick="confirmDelete('<%= operator.id %>', '<%= operator.username %>')">刪除</button>
+                </td>
               </tr>
             <% }); %>
           </tbody>
@@ -47,3 +52,47 @@
     </div>
   </div>
 </div>
+
+<!-- 變更密碼 Modal -->
+<dialog id="changePasswordModal" class="modal">
+  <form method="POST" action="/settings/operators/change-password" class="modal-box">
+    <h3 class="font-bold text-lg mb-4">變更密碼</h3>
+    <input type="hidden" name="operatorId" id="changePasswordOperatorId">
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">新密碼</span>
+      </label>
+      <input type="password" name="newPassword" class="input input-bordered" required>
+    </div>
+    <div class="modal-action">
+      <button type="submit" class="btn btn-primary">確認</button>
+      <button type="button" class="btn" onclick="closeChangePasswordModal()">取消</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+function openChangePasswordModal(id, username) {
+  const modal = document.getElementById('changePasswordModal');
+  document.getElementById('changePasswordOperatorId').value = id;
+  modal.showModal();
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').close();
+}
+
+function confirmDelete(id, username) {
+  if (confirm(`確定要刪除操作員 ${username} 嗎？`)) {
+    fetch(`/settings/operators/${id}`, {
+      method: 'DELETE',
+    }).then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('刪除失敗');
+      }
+    });
+  }
+}
+</script>
