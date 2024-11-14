@@ -27,13 +27,17 @@ app.use(session({
   }
 }));
 
-// 初始化資料庫
+// 初始化資料庫並啟動伺服器
+console.log('Initializing database...');
 initDatabase()
     .then(() => {
-        console.log('Database initialized successfully');
+        console.log('Database initialization successful');
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
     })
     .catch(err => {
-        console.error('Failed to initialize database:', err);
+        console.error('Database initialization failed:', err);
         process.exit(1);
     });
 
@@ -73,8 +77,4 @@ app.use('/settings', authMiddleware, settingsRouter);
 app.use((req, res, next) => {
   res.locals.path = req.path;
   next();
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });

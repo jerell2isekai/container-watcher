@@ -2,64 +2,80 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-const db = new sqlite3.Database(path.join(__dirname, '../main.db'));
+// 指向專案根目錄的 main.db
+const db = new sqlite3.Database('main.db');
 
-// 初始化資料庫
-function initDatabase() {
+function checkAndCreateTable(tableName, schema) {
     return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            // 建立資料表
-            db.run(`CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT
-            )`, (err) => {
-                if (err) {
-                    console.error('Create table error:', err);
-                    reject(err);
-                    return;
-                }
-
-                // 檢查管理員帳號
-                db.get("SELECT * FROM users WHERE username = ?", ["admin"], (err, row) => {
-                    if (err) {
-                        console.error('Query admin error:', err);
-                        reject(err);
-                        return;
-                    }
-
-                    const hashedPassword = bcrypt.hashSync("admin", 10);
-
-                    if (!row) {
-                        // 如果沒有管理員帳號，建立一個
-                        db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
-                            ["admin", hashedPassword], (err) => {
-                                if (err) {
-                                    console.error('Insert admin error:', err);
-                                    reject(err);
-                                }
-                                console.log('Admin account created');
-                                resolve();
-                            });
-                    } else if (row.password === null) {
-                        // 如果密碼是 null，更新密碼
-                        db.run("UPDATE users SET password = ? WHERE username = ?",
-                            [hashedPassword, "admin"], (err) => {
-                                if (err) {
-                                    console.error('Update admin password error:', err);
-                                    reject(err);
-                                }
-                                console.log('Admin password updated');
-                                resolve();
-                            });
-                    } else {
-                        // 一切正常，直接結束
+        db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [tableName], (err, row) => {
+            if (err) {
+                reject(err);
+            } else if (!row) {
+                db.run(`CREATE TABLE ${tableName} ${schema}`, (err) => {
+                    if (err) reject(err);
+                    else {
+                        console.log(`Table ${tableName} created`);
                         resolve();
                     }
                 });
-            });
+            } else {
+                console.log(`Table ${tableName} already exists`);
+                resolve();
+            }
         });
     });
+}
+
+function initDatabase() {
+    const usersSchema = `(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT
+    )`;
+
+    const containersSchema = `(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        host TEXT NOT NULL,
+        container_name TEXT NOT NULL,
+        host_name TEXT NOT NULL,
+        ssh_key TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`;
+
+    const setupAdminUser = () => {
+        return new Promise((resolve, reject) => {
+            const hashedPassword = bcrypt.hashSync("admin", 10);
+            db.get("SELECT * FROM users WHERE username = ?", ["admin"], (err, row) => {
+                if (err) return reject(err);
+                
+                if (!row) {
+                    db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
+                        ["admin", hashedPassword], (err) => {
+                            if (err) reject(err);
+                            else {
+                                console.log('Admin user created');
+                                resolve();
+                            }
+                        });
+                } else {
+                    console.log('Admin user exists');
+                    resolve();
+                }
+            });
+        });
+    };
+
+    // 檢查並創建 users 表
+    return checkAndCreateTable('users', usersSchema)
+        .then(() => checkAndCreateTable('containers', containersSchema)) // 檢查並創建 containers 表
+        .then(setupAdminUser)
+        .then(() => {
+            console.log('Database initialization completed');
+        })
+        .catch(err => {
+            console.error('Database initialization failed:', err);
+            throw err;
+        });
 }
 
 // 驗證使用者
@@ -97,8 +113,45 @@ function resetAdmin() {
     });
 }
 
+// 新增容器相關的函數
+function addContainer(container) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `INSERT INTO containers (host, container_name, host_name, ssh_key) 
+             VALUES (?, ?, ?, ?)`,
+            [container.host, container.container_name, container.host_name, container.ssh_key],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.lastID);
+            }
+        );
+    });
+}
+
+function getAllContainers() {
+    return new Promise((resolve, reject) => {
+        db.all("SELECT * FROM containers", (err, rows) => {
+            console.log('getAllContainers:', rows); // 添加日志以檢查返回的數據
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+function getContainer(hostName) {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT * FROM containers WHERE host_name = ?", [hostName], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
 module.exports = {
     initDatabase,
     verifyUser,
-    resetAdmin  // 導出重設函數
+    resetAdmin,  // 導出重設函數
+    addContainer,
+    getAllContainers,
+    getContainer
 };

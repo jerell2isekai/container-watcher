@@ -3,7 +3,40 @@
   <h1 class="text-3xl font-bold mb-4">Settings</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-      <!-- Settings content here -->
+      <h2 class="card-title">新增監控容器</h2>
+      <form action="/settings/container" method="POST" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host IP</span>
+          </label>
+          <input type="text" name="host" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Container Name</span>
+          </label>
+          <input type="text" name="container_name" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Host Name</span>
+          </label>
+          <input type="text" name="host_name" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SSH Key</span>
+          </label>
+          <textarea name="ssh_key" class="textarea textarea-bordered h-24" required></textarea>
+        </div>
+        
+        <div class="form-control mt-6">
+          <button class="btn btn-primary">新增容器</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

@@ -2,11 +2,18 @@
 <div class="w-full">
   <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
   <div class="mb-4">
-    <% hosts.forEach(host => { %>
-      <button onclick="viewLogs('<%= host.name %>')" class="btn btn-primary mr-2">
-        <%= host.name %>
-      </button>
-    <% }); %>
+    <%# 檢查 hosts 是否存在且為陣列 %>
+    <% if (Array.isArray(hosts) && hosts.length > 0) { %>
+      <% hosts.forEach(host => { %>
+        <button onclick="viewLogs('<%= host.host_name %>')" class="btn btn-primary mr-2">
+          <%= host.container_name %> (<%= host.host %>)
+        </button>
+      <% }); %>
+    <% } else { %>
+      <div class="alert alert-warning">
+        No containers found. Please add containers in settings.
+      </div>
+    <% } %>
   </div>
   <div class="container">
     <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-[600px] overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
@@ -15,8 +22,8 @@
 
 <script>
 let currentEventSource = null;
-
 function viewLogs(hostName) {
+  console.log('Viewing logs for host:', hostName); // 新增除錯日誌
   const logElement = document.getElementById('log');
   logElement.innerHTML = '正在連接...';
   
@@ -26,7 +33,7 @@ function viewLogs(hostName) {
   }
   
   // 使用新的 API 路徑
-  const eventSource = new EventSource(`/api/logs?host=${encodeURIComponent(hostName)}`, {
+  const eventSource = new EventSource(`/api/container/logs?host=${encodeURIComponent(hostName)}`, {
     withCredentials: true
   });
   
@@ -37,8 +44,10 @@ function viewLogs(hostName) {
       logElement.innerHTML = '';
     }
     const newLog = document.createElement('div');
-    newLog.textContent = event.data;
+    newLog.innerHTML = event.data; // 使用 innerHTML 以支援著色
     logElement.appendChild(newLog);
+    
+    // 滾動到底部
     logElement.scrollTop = logElement.scrollHeight;
   };
   
@@ -47,14 +56,17 @@ function viewLogs(hostName) {
     if (currentEventSource) {
       currentEventSource.close();
       currentEventSource = null;
-      if (logElement.innerHTML === '正在連接...') {
-        logElement.innerHTML = '連接失敗';
-      } else {
-        logElement.innerHTML += '\n連接已關閉';
-      }
+      logElement.innerHTML += '<div class="text-red-500">連接已關閉</div>';
     }
   };
 }
+
+// 頁面卸載時清理連接
+window.addEventListener('beforeunload', () => {
+  if (currentEventSource) {
+    currentEventSource.close();
+  }
+});
 </script>
 
 <%- include('partials/logs-script') %>
