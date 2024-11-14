@@ -1,21 +1,49 @@
-# Container Watcher
+<div align="center">
+<h3 align="center">Container Watcher</h3>
 
-A web application for monitoring Docker container logs across multiple servers. Supports collaborative management with two permission levels: admin and operator.
+<p align="center">
+A powerful web application for real-time monitoring of Docker container logs across multiple servers with collaborative management features.
+<br/>
+</div>
 
-## Features
+![License](https://img.shields.io/github/license/jerell2isekai/container-watcher)
 
-- Real-time monitoring of Docker container logs across multiple servers
-- SSH key authentication for remote server connections
-- Multi-user collaboration mechanism
-- Container tag management
-- Real-time log updates in web interface
+## Table of Contents
 
-## Requirements
+- [Table of Contents](#table-of-contents)
+- [About The Project](#about-the-project)
+  - [Key Features](#key-features)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
 
-- Node.js 14.0 or above
-- SQLite3
-- SSH service enabled on remote servers to be monitored
+## About The Project
 
-## Installation
+![Screenshot](docs/images/demo.png)
 
-1. Clone the project
+Container Watcher is a web-based monitoring solution that enables real-time observation of Docker container logs across multiple servers. With built-in user management and collaborative features, it's perfect for teams managing distributed container deployments.
+
+### Key Features
+
+- 🔄 Real-time monitoring of Docker container logs across multiple servers
+- 🔐 Secure SSH key authentication for remote server connections
+- 👥 Multi-user collaboration with role-based access control (admin/operator)
+- 🏷️ Container tag management for better organization
+- 📊 Interactive web interface with real-time updates
+- 🔍 Advanced log filtering and search capabilities
+
+### Built With
+
+* [Node.js](https://nodejs.org/)
+* [Express](https://expressjs.com/)
+* [SQLite3](https://www.sqlite.org/)
+* [EJS](https://ejs.co/)
+* [SSH2](https://github.com/mscdex/ssh2)
+
+## Getting Started
+
+Container Watcher supports installation methods: Docker containerized deployment
+
+### Prerequisites
+
+* docker and docker-compose installed on your system
