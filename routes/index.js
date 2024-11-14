@@ -28,10 +28,12 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const isValid = await verifyUser(username, password);
+    const { isValid, role } = await verifyUser(username, password);
     if (isValid) {
       req.session.authenticated = true;
       req.session.username = username;
+      req.session.role = role; // 設定角色
+      await new Promise((resolve) => req.session.save(resolve));
       res.redirect('/watcher');
     } else {
       res.redirect('/login?error=1');

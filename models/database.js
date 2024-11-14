@@ -31,7 +31,8 @@ function initDatabase() {
     const usersSchema = `(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
-        password TEXT
+        password TEXT,
+        role TEXT DEFAULT 'admin'
     )`;
 
     const containersSchema = `(
@@ -42,6 +43,13 @@ function initDatabase() {
         username TEXT NOT NULL DEFAULT 'root',
         ssh_key TEXT NOT NULL,
         tags TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`;
+
+    const operatorsSchema = `(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`;
 
@@ -93,6 +101,7 @@ function initDatabase() {
 
     // 檢查並創建 users 表
     return checkAndCreateTable('users', usersSchema)
+        .then(() => checkAndCreateTable('operators', operatorsSchema))
         .then(() => checkAndCreateTable('containers', containersSchema)) // 檢查並創建 containers 表
         .then(() => updateContainersTable())  // 新增更新表結構的步驟
         .then(setupAdminUser)
@@ -108,11 +117,24 @@ function initDatabase() {
 // 驗證使用者
 function verifyUser(username, password) {
     return new Promise((resolve, reject) => {
+        // 先檢查 admin 用戶
         db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
             if (err) return reject(err);
-            if (!row) return resolve(false);
-            const isValid = bcrypt.compareSync(password, row.password);
-            resolve(isValid);
+            if (row) {
+                const isValid = bcrypt.compareSync(password, row.password);
+                const role = isValid ? 'admin' : null;
+                console.log('Admin verify result:', { username, isValid, role });
+                return resolve({ isValid, role });
+            }
+            // 檢查 operator 用戶
+            db.get("SELECT * FROM operators WHERE username = ?", [username], (err, row) => {
+                if (err) return reject(err);
+                if (!row) return resolve({ isValid: false, role: null });
+                const isValid = bcrypt.compareSync(password, row.password);
+                const role = isValid ? 'operator' : null;
+                console.log('Operator verify result:', { username, isValid, role });
+                resolve({ isValid, role });
+            });
         });
     });
 }
@@ -229,6 +251,30 @@ function updateContainer(id, container) {
     });
 }
 
+// 新增 operator 相關函數
+function addOperator(username, password) {
+    return new Promise((resolve, reject) => {
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        db.run(
+            "INSERT INTO operators (username, password) VALUES (?, ?)",
+            [username, hashedPassword],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.lastID);
+            }
+        );
+    });
+}
+
+function getAllOperators() {
+    return new Promise((resolve, reject) => {
+        db.all("SELECT id, username, created_at FROM operators", (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
 module.exports = {
     initDatabase,
     verifyUser,
@@ -238,4 +284,6 @@ module.exports = {
     getContainer,
     getAllTags, // 新增這一行
     updateContainer,  // 添加這行
+    addOperator,
+    getAllOperators,
 };

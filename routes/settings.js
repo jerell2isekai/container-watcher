@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { addContainer, getAllContainers, updateContainer } = require('../models/database');
+const { addContainer, getAllContainers, updateContainer, addOperator, getAllOperators } = require('../models/database');
+
+// 管理員權限中間件
+const adminRequired = (req, res, next) => {
+  if (req.session.role !== 'admin') {
+    return res.status(403).redirect('/watcher');
+  }
+  next();
+};
 
 router.get('/', async (req, res) => {
   const containers = await getAllContainers();
@@ -11,14 +19,14 @@ router.get('/', async (req, res) => {
 });
 
 // 新增容器頁面
-router.get('/new', (req, res) => {
+router.get('/new', adminRequired, (req, res) => {
   res.render('settings/new', {
     path: '/settings/new'
   });
 });
 
 // 修改容器頁面
-router.get('/modify', async (req, res) => {
+router.get('/modify', adminRequired, async (req, res) => {
   const containers = await getAllContainers();
   res.render('settings/modify', {
     path: '/settings/modify',
@@ -76,6 +84,25 @@ router.post('/container/update', async (req, res) => {
   } catch (error) {
     console.error('Error updating container:', error); // 新增詳細錯誤日誌
     res.status(500).send(`Error updating container: ${error.message}`);
+  }
+});
+
+// 子帳號管理路由
+router.get('/operators', adminRequired, async (req, res) => {
+  const operators = await getAllOperators();
+  res.render('settings/operators', {
+    path: '/settings/operators',
+    operators
+  });
+});
+
+router.post('/operators', adminRequired, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    await addOperator(username, password);
+    res.redirect('/settings/operators');
+  } catch (error) {
+    res.status(500).send('Error adding operator');
   }
 });
 

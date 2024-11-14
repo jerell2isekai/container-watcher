@@ -45,6 +45,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layout');
 app.use(expressLayouts);
 
+// 全域變數 - 移到更前面，在 expressLayouts 之後
+app.use((req, res, next) => {
+  console.log('Session data:', req.session); // 新增除錯日誌
+  res.locals.user = {
+    username: req.session.username,
+    role: req.session.role,
+    isAuthenticated: req.session.authenticated
+  };
+  console.log('Locals user:', res.locals.user); // 新增除錯日誌
+  res.locals.path = req.path;
+  next();
+});
+
 // 靜態文件服務器
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -57,13 +70,7 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// 全域變數 - 用於導航高亮 (移到路由之前)
-app.use((req, res, next) => {
-  res.locals.path = req.path;
-  next();
-});
-
-// API 路由配置 (移除舊的配置)
+// API 路由配置
 app.use('/api/container', authMiddleware, apiRouter);
 
 // 頁面路由配置
@@ -71,8 +78,33 @@ app.use('/', indexRouter);
 app.use('/watcher', authMiddleware, watcherRouter);
 app.use('/settings', authMiddleware, settingsRouter);
 
-// 全域變數 - 用於導航高亮
-app.use((req, res, next) => {
-  res.locals.path = req.path;
-  next();
-});
+// 包裝 session 操作為 Promise 函數
+const regenerateSession = (req) => {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+};
+
+const saveSession = (req) => {
+  return new Promise((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+};
+
+// 移除這個重複的登入處理
+// app.post('/login', async (req, res) => { ... });
+
+// 移除重複的全域變數中間件
+// app.use((req, res, next) => {
+//   res.locals.path = req.path;
+//   res.locals.user = {
+//     role: req.session.role || 'guest'
+//   };
+//   next();
+// });

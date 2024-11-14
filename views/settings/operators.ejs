@@ -1,0 +1,49 @@
+<%- contentFor('body') %>
+<div class="w-full">
+  <h1 class="text-3xl font-bold mb-4">子帳號管理</h1>
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <!-- 新增子帳號表單 -->
+      <form id="operatorForm" action="/settings/operators" method="POST" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Username</span>
+          </label>
+          <input type="text" name="username" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input type="password" name="password" class="input input-bordered" required>
+        </div>
+        
+        <div class="form-control mt-6">
+          <button class="btn btn-primary">新增子帳號</button>
+        </div>
+      </form>
+
+      <!-- 子帳號列表 -->
+      <div class="divider">已建立的子帳號</div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>建立時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% operators.forEach(function(operator) { %>
+              <tr>
+                <td><%= operator.username %></td>
+                <td><%= new Date(operator.created_at).toLocaleString() %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

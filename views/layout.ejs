@@ -22,18 +22,20 @@
         <!-- Settings 階層式選單 -->
         <li>
           <details <%= path.startsWith('/settings') ? 'open' : '' %>>
-            <summary>Settings</summary>
+            <summary>Settings <%= user ? `(${user.role})` : '' %></summary>
+            <% console.log('Layout render user:', user); %>  <!-- EJS 除錯輸出 -->
             <ul>
-              <li>
-                <a href="/settings/new" class="<%= path === '/settings/new' ? 'active' : '' %>">
-                  New Container
-                </a>
-              </li>
-              <li>
-                <a href="/settings/modify" class="<%= path === '/settings/modify' ? 'active' : '' %>">
-                  Modify Container
-                </a>
-              </li>
+              <% if (user && user.role === 'admin') { %>
+                <li>
+                  <a href="/settings/new">New Container</a>
+                </li>
+                <li>
+                  <a href="/settings/modify">Modify Container</a>
+                </li>
+                <li>
+                  <a href="/settings/operators">管理子帳號</a>
+                </li>
+              <% } %>
             </ul>
           </details>
         </li>
