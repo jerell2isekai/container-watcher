@@ -1,0 +1,53 @@
+# 忽略 .git 目錄
+.git
+
+.db
+
+# 忽略 node_modules 目錄（如果使用 Node.js）
+node_modules
+
+# 忽略編譯後的 JavaScript 檔案
+*.js.map
+
+# 忽略 Python 的虛擬環境
+venv/
+__pycache__/
+*.py[cod]
+
+# 忽略構建輸出
+build/
+dist/
+*.egg-info
+
+# 忽略 IDE 配置
+.vscode/
+.idea/
+
+# 忽略 Mac 系統檔案
+.DS_Store
+
+# 忽略隱藏的臨時檔案
+.*.swp
+
+# 忽略日誌檔案
+*.log
+
+# 忽略 Docker 自己的檔案（避免循環）
+.dockerignore
+Dockerfile
+.dockerfile
+
+# 忽略其他常見的臨時檔案或輸出
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# 忽略敏感信息（如果有）
+*.pem
+*.crt
+*.key
+
+# 忽略資料庫檔案
+main.db
+*.db

@@ -88,7 +88,6 @@ function onHostSelect(hostName) {
 
 // 原有的 viewLogs 功能保持不變
 function viewLogs(hostName) {
-  console.log('Viewing logs for host:', hostName); // 新增除錯日誌
   const logElement = document.getElementById('log');
   logElement.innerHTML = '正在連接...';
   
@@ -117,7 +116,6 @@ function viewLogs(hostName) {
   };
   
   eventSource.onerror = function(error) {
-    console.error('EventSource failed:', error);
     if (currentEventSource) {
       currentEventSource.close();
       currentEventSource = null;

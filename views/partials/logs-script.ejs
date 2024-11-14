@@ -152,10 +152,9 @@
     };
 
     source.onerror = function(event) {
-      console.error('EventSource failed:', event);
       source.close();
       window.currentEventSource = null;
-      logDiv.innerHTML += '<div style="color: #ff4444">連接已關閉</div>';
+      logDiv.innerHTML += '<div style="color: #ff4444">連接���關閉</div>';
     };
   }
 

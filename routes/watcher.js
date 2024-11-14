@@ -6,7 +6,7 @@ router.get('/', async (req, res) => {
   try {
     const hosts = await getAllContainers();
     const tags = await getAllTags();
-    console.log('hosts', hosts);
+    
     res.render('watcher', { 
       hosts,
       tags,

@@ -2,8 +2,13 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-// 指向專案根目錄的 main.db
-const db = new sqlite3.Database('main.db');
+// 修改資料庫路徑為絕對路徑
+const dbPath = path.join(__dirname, '../main.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Database creation error:', err);
+    }
+});
 
 function checkAndCreateTable(tableName, schema) {
     return new Promise((resolve, reject) => {
@@ -13,13 +18,9 @@ function checkAndCreateTable(tableName, schema) {
             } else if (!row) {
                 db.run(`CREATE TABLE ${tableName} ${schema}`, (err) => {
                     if (err) reject(err);
-                    else {
-                        console.log(`Table ${tableName} created`);
-                        resolve();
-                    }
+                    else resolve();
                 });
             } else {
-                console.log(`Table ${tableName} already exists`);
                 resolve();
             }
         });
@@ -38,7 +39,7 @@ function initDatabase() {
         host TEXT NOT NULL,
         container_name TEXT NOT NULL,
         host_name TEXT NOT NULL,
-        username TEXT NOT NULL DEFAULT 'root',  // 設定預設值為 'root'
+        username TEXT NOT NULL DEFAULT 'root',
         ssh_key TEXT NOT NULL,
         tags TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -57,7 +58,6 @@ function initDatabase() {
                         // 新增 username 欄位
                         db.run("ALTER TABLE containers ADD COLUMN username TEXT NOT NULL DEFAULT 'root'", (err) => {
                             if (err) return reject(err);
-                            console.log('Added username column to containers table');
                             resolve();
                         });
                     } else {
@@ -143,6 +143,16 @@ function resetAdmin() {
 // 新增容器相關的函數
 function addContainer(container) {
     return new Promise((resolve, reject) => {
+        // 檢查必要欄位
+        if (!container.host || !container.container_name || !container.host_name || !container.ssh_key) {
+            console.error('欄位驗證失敗:', container);
+            return reject(new Error('缺少必要欄位'));
+        }
+
+        // 設定預設值
+        const username = container.username || 'root';
+        const tags = container.tags || '';
+
         db.run(
             `INSERT INTO containers (host, container_name, host_name, username, ssh_key, tags) 
              VALUES (?, ?, ?, ?, ?, ?)`,
@@ -150,13 +160,17 @@ function addContainer(container) {
                 container.host, 
                 container.container_name, 
                 container.host_name,
-                container.username,  // 新增字段
+                username,
                 container.ssh_key,
-                container.tags
+                tags
             ],
             function(err) {
-                if (err) reject(err);
-                else resolve(this.lastID);
+                if (err) {
+                    console.error('新增容器時發生錯誤:', err);
+                    reject(err);
+                } else {
+                    resolve(this.lastID);
+                }
             }
         );
     });
@@ -165,7 +179,6 @@ function addContainer(container) {
 function getAllContainers() {
     return new Promise((resolve, reject) => {
         db.all("SELECT * FROM containers", (err, rows) => {
-            console.log('getAllContainers:', rows); // 添加日志以檢查返回的數據
             if (err) reject(err);
             else resolve(rows);
         });

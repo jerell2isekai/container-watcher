@@ -91,14 +91,12 @@ router.get('/logs', async (req, res) => {
 
         // 處理串流結束
         stream.on('close', (code, signal) => {
-          console.log('Stream closed', { code, signal });
           conn.end();
         });
 
         // 處理串流錯誤
         stream.on('error', (err) => {
-          console.error('Stream Error:', err);
-          res.write(`data: 串流錯誤: ${err.message}\n\n`);
+          console.error('Stream error:', err);
           conn.end();
         });
       });

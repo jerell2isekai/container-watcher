@@ -28,10 +28,8 @@ app.use(session({
 }));
 
 // 初始化資料庫並啟動伺服器
-console.log('Initializing database...');
 initDatabase()
     .then(() => {
-        console.log('Database initialization successful');
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
