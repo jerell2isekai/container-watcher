@@ -39,6 +39,7 @@ function initDatabase() {
         container_name TEXT NOT NULL,
         host_name TEXT NOT NULL,
         ssh_key TEXT NOT NULL,
+        tags TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`;
 
@@ -117,9 +118,15 @@ function resetAdmin() {
 function addContainer(container) {
     return new Promise((resolve, reject) => {
         db.run(
-            `INSERT INTO containers (host, container_name, host_name, ssh_key) 
-             VALUES (?, ?, ?, ?)`,
-            [container.host, container.container_name, container.host_name, container.ssh_key],
+            `INSERT INTO containers (host, container_name, host_name, ssh_key, tags) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                container.host, 
+                container.container_name, 
+                container.host_name, 
+                container.ssh_key,
+                container.tags
+            ],
             function(err) {
                 if (err) reject(err);
                 else resolve(this.lastID);
@@ -147,11 +154,47 @@ function getContainer(hostName) {
     });
 }
 
+function getAllTags() {
+    return new Promise((resolve, reject) => {
+        db.all("SELECT DISTINCT tags FROM containers WHERE tags IS NOT NULL AND tags != ''", (err, rows) => {
+            if (err) reject(err);
+            else {
+                const tags = rows.map(row => row.tags);
+                resolve(tags);
+            }
+        });
+    });
+}
+
+function updateContainer(id, container) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `UPDATE containers 
+             SET host = ?, container_name = ?, host_name = ?, ssh_key = ?, tags = ?
+             WHERE id = ?`,
+            [
+                container.host,
+                container.container_name,
+                container.host_name,
+                container.ssh_key,
+                container.tags,
+                id
+            ],
+            function(err) {
+                if (err) reject(err);
+                else resolve(this.changes);
+            }
+        );
+    });
+}
+
 module.exports = {
     initDatabase,
     verifyUser,
     resetAdmin,  // 導出重設函數
     addContainer,
     getAllContainers,
-    getContainer
+    getContainer,
+    getAllTags, // 新增這一行
+    updateContainer,  // 添加這行
 };

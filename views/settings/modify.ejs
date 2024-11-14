@@ -1,22 +1,20 @@
 <%- contentFor('body') %>
 <div class="w-full">
-  <h1 class="text-3xl font-bold mb-4">Settings</h1>
+  <h1 class="text-3xl font-bold mb-4">修改容器</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="card-title">容器設定</h2>
-        <div class="flex gap-2">
-          <select id="containerSelect" class="select select-bordered">
-            <option value="">選擇容器</option>
-            <% containers.forEach(function(container) { %>
-              <option value="<%= container.id %>"><%= container.host_name %></option>
-            <% }); %>
-          </select>
-          <button id="btnNew" class="btn btn-primary">新增容器</button>
-        </div>
+        <select id="containerSelect" class="select select-bordered w-full max-w-xs">
+          <option value="">選擇要修改的容器</option>
+          <% containers.forEach(function(container) { %>
+            <option value="<%= container.id %>"><%= container.host_name %></option>
+          <% }); %>
+        </select>
       </div>
 
-      <form id="containerForm" action="/settings/container" method="POST" class="space-y-4">
+      <form id="containerForm" action="/settings/container/update" method="POST" class="space-y-4">
+        <input type="hidden" name="id" id="containerId">
+        
         <div class="form-control">
           <label class="label">
             <span class="label-text">Host IP</span>
@@ -53,7 +51,7 @@
         </div>
         
         <div class="form-control mt-6">
-          <button class="btn btn-primary">新增容器</button>
+          <button type="submit" class="btn btn-primary" disabled id="submitBtn">更新容器</button>
         </div>
       </form>
     </div>
@@ -63,49 +61,35 @@
 <script>
 const containerSelect = document.getElementById('containerSelect');
 const containerForm = document.getElementById('containerForm');
-const btnNew = document.getElementById('btnNew');
-
-// 容器資料列表
+const containerId = document.getElementById('containerId');
+const submitBtn = document.getElementById('submitBtn');
 const containers = <%- JSON.stringify(containers) %>;
 
 // 選擇容器時填充表單
 containerSelect.addEventListener('change', function() {
   const selectedId = this.value;
   if (!selectedId) {
-    resetForm();
+    containerForm.reset();
+    submitBtn.disabled = true;
     return;
   }
   
   const container = containers.find(c => c.id == selectedId);
   if (container) {
     fillForm(container);
+    submitBtn.disabled = false;
   }
-});
-
-// 點擊新增按鈕
-btnNew.addEventListener('click', function() {
-  containerSelect.value = '';
-  resetForm();
 });
 
 // 填充表單
 function fillForm(container) {
+  containerId.value = container.id;
   const fields = ['host', 'container_name', 'host_name', 'ssh_key', 'tags'];
   fields.forEach(field => {
     const input = containerForm.elements[field];
     if (input) {
-      // 確保即使 tags 為 null 或 undefined 時也能正確處理
       input.value = container[field] || '';
     }
   });
-  
-  // 為了除錯，可以加入以下程式碼
-  console.log('Container data:', container);
-  console.log('Tags value:', container.tags);
-}
-
-// 重置表單
-function resetForm() {
-  containerForm.reset();
 }
 </script>

@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getAllContainers } = require('../models/database');
+const { getAllContainers, getAllTags } = require('../models/database');
 
 router.get('/', async (req, res) => {
   try {
     const hosts = await getAllContainers();
+    const tags = await getAllTags();
     console.log('hosts', hosts);
     res.render('watcher', { 
       hosts,
+      tags,
       path: '/watcher'
     });
   } catch (error) {

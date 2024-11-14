@@ -1,20 +1,36 @@
 <%- contentFor('body') %>
 <div class="w-full">
   <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
+  
+  <!-- 新增標籤篩選器 -->
   <div class="mb-4">
-    <%# 檢查 hosts 是否存在且為陣列 %>
+    <select id="tagFilter" class="select select-bordered w-full max-w-xs" onchange="filterByTag(this.value)">
+      <option value="">所有標籤</option>
+      <% if (Array.isArray(tags)) { %>
+        <% tags.forEach(tag => { %>
+          <option value="<%= tag %>"><%= tag %></option>
+        <% }); %>
+      <% } %>
+    </select>
+  </div>
+
+  <div class="mb-4" id="hostButtons">
     <% if (Array.isArray(hosts) && hosts.length > 0) { %>
       <% hosts.forEach(host => { %>
-        <button onclick="viewLogs('<%= host.host_name %>')" class="btn btn-primary mr-2">
+        <button onclick="viewLogs('<%= host.host_name %>')" 
+                class="btn btn-primary mr-2 mb-2 host-button"
+                data-tags="<%= host.tags %>">
           <%= host.container_name %> (<%= host.host %>)
+          <% if (host.tags) { %>
+            <span class="ml-2 text-xs bg-base-200 px-2 py-1 rounded-full text-white">
+              <%= host.tags %>
+            </span>
+          <% } %>
         </button>
       <% }); %>
-    <% } else { %>
-      <div class="alert alert-warning">
-        No containers found. Please add containers in settings.
-      </div>
     <% } %>
   </div>
+
   <div class="container">
     <div id="log" class="w-full bg-gray-900 text-gray-200 text-xs p-3 h-[600px] overflow-y-scroll font-mono whitespace-pre-wrap break-words"></div>
   </div>
@@ -67,6 +83,18 @@ window.addEventListener('beforeunload', () => {
     currentEventSource.close();
   }
 });
+
+function filterByTag(selectedTag) {
+  const buttons = document.querySelectorAll('.host-button');
+  buttons.forEach(button => {
+    const buttonTags = button.getAttribute('data-tags');
+    if (!selectedTag || buttonTags === selectedTag) {
+      button.style.display = '';
+    } else {
+      button.style.display = 'none';
+    }
+  });
+}
 </script>
 
 <%- include('partials/logs-script') %>

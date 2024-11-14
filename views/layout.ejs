@@ -17,8 +17,28 @@
     <div class="drawer-side">
       <label for="my-drawer-2" class="drawer-overlay"></label> 
       <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
-        <li><a href="/watcher" class="<%= path === '/watcher' ? 'active' : '' %>">Logs Watcher</a></li>
-        <li><a href="/settings" class="<%= path === '/settings' ? 'active' : '' %>">Settings</a></li>
+        <li><a href="/watcher" class="<%= path === '/watcher' ? 'active' : '' %>">Watcher</a></li>
+        
+        <!-- Settings 階層式選單 -->
+        <li>
+          <details <%= path.startsWith('/settings') ? 'open' : '' %>>
+            <summary>Settings</summary>
+            <ul>
+              <li>
+                <a href="/settings/new" class="<%= path === '/settings/new' ? 'active' : '' %>">
+                  New Container
+                </a>
+              </li>
+              <li>
+                <a href="/settings/modify" class="<%= path === '/settings/modify' ? 'active' : '' %>">
+                  Modify Container
+                </a>
+              </li>
+            </ul>
+          </details>
+        </li>
+        
+        <li><a href="/logout" onclick="return confirm('確定要登出？')">Logout</a></li>
       </ul>
     </div>
   </div>
