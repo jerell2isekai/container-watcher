@@ -47,13 +47,13 @@ app.use(expressLayouts);
 
 // 全域變數 - 移到更前面，在 expressLayouts 之後
 app.use((req, res, next) => {
-  console.log('Session data:', req.session); // 新增除錯日誌
+  
   res.locals.user = {
     username: req.session.username,
     role: req.session.role,
     isAuthenticated: req.session.authenticated
   };
-  console.log('Locals user:', res.locals.user); // 新增除錯日誌
+  
   res.locals.path = req.path;
   next();
 });

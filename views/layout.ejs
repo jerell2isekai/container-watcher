@@ -24,7 +24,6 @@
         <li>
           <details <%= path.startsWith('/settings') ? 'open' : '' %>>
             <summary>Settings <%= user ? `(${user.role})` : '' %></summary>
-            <% console.log('Layout render user:', user); %>  <!-- EJS 除錯輸出 -->
             <ul>
               <% if (user && user.role === 'admin') { %>
                 <li>
@@ -34,7 +33,7 @@
                   <a href="/settings/modify">Modify Container</a>
                 </li>
                 <li>
-                  <a href="/settings/operators">管理子帳號</a>
+                  <a href="/settings/operators">Manage Subaccounts</a>
                 </li>
                 <li>
                   <a href="/settings/admin">管理員設定</a>
@@ -44,7 +43,7 @@
           </details>
         </li>
         
-        <li><a href="/logout" onclick="return confirm('確定要登出？')">Logout</a></li>
+        <li><a href="/logout" onclick="return confirm('Are you sure you want to logout?')">Logout</a></li>
       </ul>
     </div>
   </div>

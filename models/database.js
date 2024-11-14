@@ -117,24 +117,19 @@ function initDatabase() {
 // 驗證使用者
 function verifyUser(username, password) {
     return new Promise((resolve, reject) => {
-        // 先檢查 admin 用戶
         db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
             if (err) return reject(err);
             if (row) {
                 const isValid = bcrypt.compareSync(password, row.password);
                 const role = isValid ? 'admin' : null;
-                // 檢查是否為預設密碼
                 const isDefaultPassword = isValid && password === 'admin';
-                console.log('Admin verify result:', { username, isValid, role, isDefaultPassword });
                 return resolve({ isValid, role, isDefaultPassword });
             }
-            // 檢查 operator 用戶
             db.get("SELECT * FROM operators WHERE username = ?", [username], (err, row) => {
                 if (err) return reject(err);
                 if (!row) return resolve({ isValid: false, role: null, isDefaultPassword: false });
                 const isValid = bcrypt.compareSync(password, row.password);
                 const role = isValid ? 'operator' : null;
-                console.log('Operator verify result:', { username, isValid, role });
                 resolve({ isValid, role, isDefaultPassword: false });
             });
         });

@@ -2,12 +2,12 @@
 <div class="w-full h-full">
   <h1 class="text-3xl font-bold mb-4">Select Host to View Logs</h1>
   
-  <!-- 將選擇器包在 flex 容器中 -->
+  <!-- Selectors in flex container -->
   <div class="flex gap-4 mb-4">
-    <!-- 標籤篩選器 -->
+    <!-- Tag filter -->
     <div>
       <select id="tagFilter" class="select select-bordered w-48" onchange="filterHosts()">
-        <option value="">所有標籤</option>
+        <option value="">All Tags</option>
         <% if (Array.isArray(tags)) { %>
           <% tags.forEach(tag => { %>
             <option value="<%= tag %>"><%= tag %></option>
@@ -16,10 +16,10 @@
       </select>
     </div>
 
-    <!-- 容器選擇器 -->
+    <!-- Container selector -->
     <div>
       <select id="hostSelect" class="select select-bordered w-96" onchange="onHostSelect(this.value)">
-        <option value="">選擇容器</option>
+        <option value="">Select Container</option>
         <% if (Array.isArray(hosts) && hosts.length > 0) { %>
           <% hosts.forEach(host => { %>
             <option value="<%= host.host_name %>" 
@@ -45,14 +45,14 @@
 <script>
 let currentEventSource = null;
 
-// 根據標籤篩選容器選項
+// Filter container options by tag
 function filterHosts() {
   const tagFilter = document.getElementById('tagFilter');
   const hostSelect = document.getElementById('hostSelect');
   const selectedTag = tagFilter.value;
   
   Array.from(hostSelect.options).forEach(option => {
-    if (option.value === '') return; // 跳過預設選項
+    if (option.value === '') return; // Skip default option
     
     const hostTags = option.getAttribute('data-tags');
     if (!selectedTag || hostTags?.includes(selectedTag)) {
@@ -62,7 +62,7 @@ function filterHosts() {
     }
   });
   
-  // 如果當前選中的選項被隱藏了，重置選擇
+  // Reset selection if the currently selected option is hidden
   if (hostSelect.selectedOptions[0].style.display === 'none') {
     hostSelect.value = '';
     if (currentEventSource) {
@@ -73,7 +73,7 @@ function filterHosts() {
   }
 }
 
-// 當選擇容器時觸發日誌查看
+// Trigger log viewing when container is selected
 function onHostSelect(hostName) {
   if (!hostName) {
     if (currentEventSource) {
@@ -86,17 +86,16 @@ function onHostSelect(hostName) {
   viewLogs(hostName);
 }
 
-// 原有的 viewLogs 功能保持不變
 function viewLogs(hostName) {
   const logElement = document.getElementById('log');
-  logElement.innerHTML = '正在連接...';
+  logElement.innerHTML = 'Connecting...';
   
-  // 如果已有連接，先關閉
+  // Close existing connection if any
   if (currentEventSource) {
     currentEventSource.close();
   }
   
-  // 使用新的 API 路徑
+  // Use new API path
   const eventSource = new EventSource(`/api/container/logs?host=${encodeURIComponent(hostName)}`, {
     withCredentials: true
   });
@@ -104,14 +103,14 @@ function viewLogs(hostName) {
   currentEventSource = eventSource;
   
   eventSource.onmessage = function(event) {
-    if (logElement.innerHTML === '正在連接...') {
+    if (logElement.innerHTML === 'Connecting...') {
       logElement.innerHTML = '';
     }
     const newLog = document.createElement('div');
-    newLog.innerHTML = event.data; // 使用 innerHTML 以支援著色
+    newLog.innerHTML = event.data; // Use innerHTML to support coloring
     logElement.appendChild(newLog);
     
-    // 滾動到底部
+    // Scroll to bottom
     logElement.scrollTop = logElement.scrollHeight;
   };
   
@@ -119,12 +118,12 @@ function viewLogs(hostName) {
     if (currentEventSource) {
       currentEventSource.close();
       currentEventSource = null;
-      logElement.innerHTML += '<div class="text-red-500">連接已關閉</div>';
+      logElement.innerHTML += '<div class="text-red-500">Connection closed</div>';
     }
   };
 }
 
-// 頁面卸載時清理連接
+// Clean up connection on page unload
 window.addEventListener('beforeunload', () => {
   if (currentEventSource) {
     currentEventSource.close();

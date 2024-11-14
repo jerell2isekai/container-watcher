@@ -1,11 +1,11 @@
 <%- contentFor('body') %>
 <div class="w-full">
-  <h1 class="text-3xl font-bold mb-4">修改容器</h1>
+  <h1 class="text-3xl font-bold mb-4">Modify Container</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <div class="flex justify-between items-center mb-4">
         <select id="containerSelect" class="select select-bordered w-full max-w-xs">
-          <option value="">選擇要修改的容器</option>
+          <option value="">Select container to modify</option>
           <% containers.forEach(function(container) { %>
             <option value="<%= container.id %>"><%= container.host_name %></option>
           <% }); %>
@@ -52,13 +52,13 @@
         
         <div class="form-control">
           <label class="label">
-            <span class="label-text">Tags (用逗號分隔)</span>
+            <span class="label-text">Tags (comma separated)</span>
           </label>
-          <input type="text" name="tags" class="input input-bordered" placeholder="例如: prod,api,web">
+          <input type="text" name="tags" class="input input-bordered" placeholder="e.g.: prod,api,web">
         </div>
         
         <div class="form-control mt-6">
-          <button type="submit" class="btn btn-primary" disabled id="submitBtn">更新容器</button>
+          <button type="submit" class="btn btn-primary" disabled id="submitBtn">Update Container</button>
         </div>
       </form>
     </div>

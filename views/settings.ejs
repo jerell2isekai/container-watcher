@@ -4,15 +4,15 @@
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="card-title">容器設定</h2>
+        <h2 class="card-title">Container Settings</h2>
         <div class="flex gap-2">
           <select id="containerSelect" class="select select-bordered">
-            <option value="">選擇容器</option>
+            <option value="">Select Container</option>
             <% containers.forEach(function(container) { %>
               <option value="<%= container.id %>"><%= container.host_name %></option>
             <% }); %>
           </select>
-          <button id="btnNew" class="btn btn-primary">新增容器</button>
+          <button id="btnNew" class="btn btn-primary">Add Container</button>
         </div>
       </div>
 
@@ -47,13 +47,13 @@
         
         <div class="form-control">
           <label class="label">
-            <span class="label-text">Tags (用逗號分隔)</span>
+            <span class="label-text">Tags (comma separated)</span>
           </label>
-          <input type="text" name="tags" class="input input-bordered" placeholder="例如: prod,api,web">
+          <input type="text" name="tags" class="input input-bordered" placeholder="e.g: prod,api,web">
         </div>
         
         <div class="form-control mt-6">
-          <button class="btn btn-primary">新增容器</button>
+          <button class="btn btn-primary">Add Container</button>
         </div>
       </form>
     </div>
@@ -65,10 +65,10 @@ const containerSelect = document.getElementById('containerSelect');
 const containerForm = document.getElementById('containerForm');
 const btnNew = document.getElementById('btnNew');
 
-// 容器資料列表
+// Container data list
 const containers = <%- JSON.stringify(containers) %>;
 
-// 選擇容器時填充表單
+// Fill form when container is selected
 containerSelect.addEventListener('change', function() {
   const selectedId = this.value;
   if (!selectedId) {
@@ -82,29 +82,29 @@ containerSelect.addEventListener('change', function() {
   }
 });
 
-// 點擊新增按鈕
+// Click add button
 btnNew.addEventListener('click', function() {
   containerSelect.value = '';
   resetForm();
 });
 
-// 填充表單
+// Fill form
 function fillForm(container) {
   const fields = ['host', 'container_name', 'host_name', 'ssh_key', 'tags'];
   fields.forEach(field => {
     const input = containerForm.elements[field];
     if (input) {
-      // 確保即使 tags 為 null 或 undefined 時也能正確處理
+      // Ensure correct handling even if tags is null or undefined
       input.value = container[field] || '';
     }
   });
   
-  // 為了除錯，可以加入以下程式碼
+  // For debugging
   console.log('Container data:', container);
   console.log('Tags value:', container.tags);
 }
 
-// 重置表單
+// Reset form
 function resetForm() {
   containerForm.reset();
 }
