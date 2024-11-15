@@ -66,17 +66,17 @@
 
     let coloredMessage = restMessage;
 
-    // 調整後的顏色方案 - 更明亮更易讀
+    // Adjusted color scheme - brighter and more readable
     const methodColorMap = {
-      'GET': '#00ff00',     // 亮綠
-      'POST': '#3b82f6',    // 亮藍
-      'PUT': '#ffd700',     // 金黃
-      'DELETE': '#ff4444',  // 亮紅
-      'PATCH': '#ff00ff',   // 亮紫
-      'OPTIONS': '#00ffff'  // 亮青
+      'GET': '#00ff00',     // Bright Green
+      'POST': '#3b82f6',    // Bright Blue
+      'PUT': '#ffd700',     // Gold
+      'DELETE': '#ff4444',  // Bright Red
+      'PATCH': '#ff00ff',   // Bright Purple
+      'OPTIONS': '#00ffff'  // Bright Cyan
     };
 
-    // 替換 HTTP 方法和 API 路徑
+    // Replace HTTP methods and API paths
     Object.entries(methodColorMap).forEach(([method, color]) => {
       coloredMessage = coloredMessage.replace(
         new RegExp(`(${method})\\s+(/[^\\s|]+)`, 'g'), 
@@ -84,37 +84,35 @@
       );
     });
 
-    // 狀態碼著色
+    // Colorize status code
     coloredMessage = coloredMessage.replace(
       /Status: (\d+)/g,
       (match, code) => {
-        const color = code >= 400 ? '#ff4444' : // 亮紅
-                     code >= 300 ? '#ffd700' : // 金黃
-                     '#00ff00';  // 亮綠
+        const color = code >= 400 ? '#ff4444' : // Bright Red
+                     code >= 300 ? '#ffd700' : // Gold
+                     '#00ff00';  // Bright Green
         return `Status: <span style="color: ${color}">${code}</span>`;
       }
     );
 
-    // Origin 著色
+    // Colorize Origin
     const validOrigins = [
-      'https://boanhealth.com',
-      'https://dev.boanhealth.com',
-      'http://localhost:3000'
+      // 'https://example.com'
     ];
     coloredMessage = coloredMessage.replace(
       /Origin: ([^,\n]+)/g,
       (match, origin) => {
-        const color = origin.includes('Unknown') ? '#ffd700' : // 金黃
-                     validOrigins.some(valid => origin.includes(valid)) ? '#00ff00' : // 亮綠
-                     '#ffffff'; // 白色
+        const color = origin.includes('Unknown') ? '#ffd700' : // Gold
+                     validOrigins.some(valid => origin.includes(valid)) ? '#00ff00' : // Bright Green
+                     '#ffffff'; // White
         return `Origin: <span style="color: ${color}">${origin}</span>`;
       }
     );
 
-    // IP 著色
+    // Colorize IP
     coloredMessage = coloredMessage.replace(
       /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|Unknown IP)/g,
-      `<span style="color: #ffa07a">$1</span>` // 亮鮭魚色
+      `<span style="color: #ffa07a">$1</span>` // Light Salmon
     );
 
     return `<span style="color: #ffffff">${timestamp} | ${level}</span> | ${coloredMessage}`;
@@ -124,12 +122,12 @@
     const logDiv = document.getElementById('log');
     logDiv.innerHTML = 'Connecting...';
     
-    // 如果已有連接，先關閉舊的
+    // If there is an existing connection, close the old one first
     if (window.currentEventSource) {
       window.currentEventSource.close();
     }
     
-    // 使用新的 API 路徑
+    // Use the new API path
     const source = new EventSource(`/api/container/logs?host=${encodeURIComponent(host)}`, {
       withCredentials: true
     });
@@ -140,12 +138,12 @@
       newLog.innerHTML = colorizeLogMessage(event.data);
       logDiv.appendChild(newLog);
       
-      // 限制日誌數量
+      // Limit log entries
       while (logDiv.children.length > 1000) {
         logDiv.removeChild(logDiv.firstChild);
       }
       
-      // 自動滾動到底部
+      // Auto scroll to bottom
       if (logDiv.scrollTop + logDiv.clientHeight >= logDiv.scrollHeight - 100) {
         logDiv.scrollTop = logDiv.scrollHeight;
       }
@@ -158,7 +156,7 @@
     };
   }
 
-  // 在頁面卸載時清理連接
+  // Clean up the connection when the page unloads
   window.addEventListener('beforeunload', () => {
     if (window.currentEventSource) {
       window.currentEventSource.close();

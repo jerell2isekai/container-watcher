@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-// 修改資料庫路徑為絕對路徑
+// Change the database path to an absolute path
 const dbPath = path.join(__dirname, '../main.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -53,17 +53,17 @@ function initDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`;
 
-    // 檢查是否需要更新表結構
+    // Check if table structure needs updating
     const updateContainersTable = () => {
         return new Promise((resolve, reject) => {
             db.get("PRAGMA table_info(containers)", (err, rows) => {
                 if (err) return reject(err);
 
-                // 檢查是否已存在 username 欄位
+                // Check if the username field already exists
                 db.get("SELECT * FROM sqlite_master WHERE type='table' AND name='containers' AND sql LIKE '%username%'", (err, row) => {
                     if (err) return reject(err);
                     if (!row) {
-                        // 新增 username 欄位
+                        // Add username field
                         db.run("ALTER TABLE containers ADD COLUMN username TEXT NOT NULL DEFAULT 'root'", (err) => {
                             if (err) return reject(err);
                             resolve();
@@ -99,11 +99,11 @@ function initDatabase() {
         });
     };
 
-    // 檢查並創建 users 表
+    // Check and create users table
     return checkAndCreateTable('users', usersSchema)
         .then(() => checkAndCreateTable('operators', operatorsSchema))
-        .then(() => checkAndCreateTable('containers', containersSchema)) // 檢查並創建 containers 表
-        .then(() => updateContainersTable())  // 新增更新表結構的步驟
+        .then(() => checkAndCreateTable('containers', containersSchema)) // Check and create containers table
+        .then(() => updateContainersTable())  // Add step to update table structure
         .then(setupAdminUser)
         .then(() => {
             console.log('Database initialization completed');
@@ -114,7 +114,7 @@ function initDatabase() {
         });
 }
 
-// 驗證使用者
+// Verify user
 function verifyUser(username, password) {
     return new Promise((resolve, reject) => {
         db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
@@ -136,7 +136,7 @@ function verifyUser(username, password) {
     });
 }
 
-// 重設管理員密碼
+// Reset admin password
 function resetAdmin() {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync("admin", 10);
@@ -159,7 +159,7 @@ function resetAdmin() {
     });
 }
 
-// 使用新密碼重設管理員密碼
+// Reset admin password with a new password
 function resetAdminWithNewPassword(newPassword) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
@@ -182,16 +182,16 @@ function resetAdminWithNewPassword(newPassword) {
     });
 }
 
-// 新增容器相關的函數
+// Add container related functions
 function addContainer(container) {
     return new Promise((resolve, reject) => {
-        // 檢查必要欄位
+        // Check required fields
         if (!container.host || !container.container_name || !container.host_name || !container.ssh_key) {
-            console.error('欄位驗證失敗:', container);
-            return reject(new Error('缺少必要欄位'));
+            console.error('Field validation failed:', container);
+            return reject(new Error('Missing required fields'));
         }
 
-        // 設定預設值
+        // Set default values
         const username = container.username || 'root';
         const tags = container.tags || '';
 
@@ -208,7 +208,7 @@ function addContainer(container) {
             ],
             function(err) {
                 if (err) {
-                    console.error('新增容器時發生錯誤:', err);
+                    console.error('Error adding container:', err);
                     reject(err);
                 } else {
                     resolve(this.lastID);
@@ -258,7 +258,7 @@ function updateContainer(id, container) {
                 container.host,
                 container.container_name,
                 container.host_name,
-                container.username,  // 新增字段
+                container.username,  // Add field
                 container.ssh_key,
                 container.tags,
                 id
@@ -271,7 +271,7 @@ function updateContainer(id, container) {
     });
 }
 
-// 新增 operator 相關函數
+// Add operator related functions
 function addOperator(username, password) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -295,7 +295,7 @@ function getAllOperators() {
     });
 }
 
-// 更新操作員密碼
+// Update operator password
 function updateOperatorPassword(id, newPassword) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
@@ -310,7 +310,7 @@ function updateOperatorPassword(id, newPassword) {
     });
 }
 
-// 刪除操作員
+// Delete operator
 function deleteOperator(id) {
     return new Promise((resolve, reject) => {
         db.run("DELETE FROM operators WHERE id = ?", [id], function(err) {
@@ -323,13 +323,13 @@ function deleteOperator(id) {
 module.exports = {
     initDatabase,
     verifyUser,
-    resetAdmin,  // 導出重設函數
+    resetAdmin, 
     resetAdminWithNewPassword,
     addContainer,
     getAllContainers,
     getContainer,
-    getAllTags, // 新增這一行
-    updateContainer,  // 添加這行
+    getAllTags, 
+    updateContainer,
     addOperator,
     getAllOperators,
     updateOperatorPassword,

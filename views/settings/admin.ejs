@@ -3,7 +3,7 @@
   <h1 class="text-3xl font-bold mb-4">Administrator Settings</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-      <!-- 顯示訊息 -->
+      <!-- Display message -->
       <% if (typeof message !== 'undefined' && message) { %>
         <div class="alert alert-success mb-4">
           <%= message %>
@@ -16,14 +16,14 @@
         </div>
       <% } %>
 
-      <!-- 初次登入提示 -->
+      <!-- First login prompt -->
       <% if (firstLogin) { %>
         <div class="alert alert-warning mb-4">
-          Must change password on first admin login
+          You must change the password on your first admin login
         </div>
       <% } %>
 
-      <!-- 重設密碼區塊 -->
+      <!-- Password reset section -->
       <div class="bg-base-200 p-6 rounded-lg max-w-md">
         <h2 class="text-xl font-bold mb-6">Change Administrator Password</h2>
         <form action="/settings/admin/reset-password" method="POST" 
@@ -31,7 +31,7 @@
           
           <div class="form-control w-full mb-4">
             <label class="label">
-              <span class="label-text">新密碼</span>
+              <span class="label-text">New Password</span>
             </label>
             <div class="relative">
               <input type="password" name="newPassword" id="newPassword"
@@ -47,7 +47,7 @@
 
           <div class="form-control w-full mb-6">
             <label class="label">
-              <span class="label-text">確認新密碼</span>
+              <span class="label-text">Confirm New Password</span>
             </label>
             <div class="relative">
               <input type="password" name="confirmPassword" id="confirmPassword"
@@ -101,7 +101,7 @@ function togglePassword(inputId) {
   }
 }
 
-// 如果是初次登入，禁止離開頁面
+// Prevent leaving the page if it's the first login
 <% if (firstLogin) { %>
 window.onbeforeunload = function() {
   return "You must change the default password before continuing";

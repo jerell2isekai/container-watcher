@@ -3,7 +3,7 @@
   <h1 class="text-3xl font-bold mb-4">Subaccount Management</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-      <!-- 新增子帳號表單 -->
+      <!-- Add Subaccount Form -->
       <form id="operatorForm" action="/settings/operators" method="POST" class="space-y-4">
         <div class="form-control">
           <label class="label">
@@ -24,7 +24,7 @@
         </div>
       </form>
 
-      <!-- 子帳號列表 -->
+      <!-- Subaccount List -->
       <div class="divider">Created Subaccounts</div>
       <div class="overflow-x-auto">
         <table class="table">
@@ -53,7 +53,7 @@
   </div>
 </div>
 
-<!-- 變更密碼 Modal -->
+<!-- Change Password Modal -->
 <dialog id="changePasswordModal" class="modal">
   <form method="POST" action="/settings/operators/change-password" class="modal-box">
     <h3 class="font-bold text-lg mb-4">Change Password</h3>

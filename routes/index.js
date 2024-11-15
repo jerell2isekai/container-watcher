@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyUser } = require('../models/database');
 
-// 首頁路由
+// Home route
 router.get('/', (req, res) => {
   if (req.session.authenticated) {
     res.redirect('/watcher');
@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
   }
 });
 
-// 登入頁面
+// Login page
 router.get('/login', (req, res) => {
   if (req.session.authenticated) {
     res.redirect('/watcher');
@@ -20,11 +20,11 @@ router.get('/login', (req, res) => {
   res.render('index', { 
     layout: false, 
     error: req.query.error,
-    path: '/login'  // 添加 path
+    path: '/login'  // Adding path
   });
 });
 
-// 登入處理
+// Login processing
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -32,10 +32,10 @@ router.post('/login', async (req, res) => {
     if (isValid) {
       req.session.authenticated = true;
       req.session.username = username;
-      req.session.role = role; // 設定角色
+      req.session.role = role; // Setting role
       await new Promise((resolve) => req.session.save(resolve));
       
-      // 檢查是否為admin帳號使用預設密碼登入
+      // Check if admin account is logging in with the default password
       if (username === 'admin' && isDefaultPassword) {
         return res.redirect('/settings/admin?firstLogin=1');
       }
@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 登出
+// Logout
 router.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login');
