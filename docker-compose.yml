@@ -10,7 +10,7 @@ services:
       - "9909:5000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      
+      # - ./database:/app/database  # optional
     environment:
       - NODE_ENV=production
       - TZ=Asia/Taipei

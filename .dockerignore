@@ -1,53 +1,53 @@
-# 忽略 .git 目錄
+# Ignore .git directory
 .git
 
-.db
+docker-compose-local.yml
 
-# 忽略 node_modules 目錄（如果使用 Node.js）
+# Only ignore database files in the database directory
+database/**/*.db
+database/*.db
+
+# Ignore node_modules directory (if using Node.js)
 node_modules
 
-# 忽略編譯後的 JavaScript 檔案
+# Ignore compiled JavaScript files
 *.js.map
 
-# 忽略 Python 的虛擬環境
+# Ignore Python virtual environment
 venv/
 __pycache__/
 *.py[cod]
 
-# 忽略構建輸出
+# Ignore build outputs
 build/
 dist/
 *.egg-info
 
-# 忽略 IDE 配置
+# Ignore IDE configurations
 .vscode/
 .idea/
 
-# 忽略 Mac 系統檔案
+# Ignore Mac system files
 .DS_Store
 
-# 忽略隱藏的臨時檔案
+# Ignore hidden temporary files
 .*.swp
 
-# 忽略日誌檔案
+# Ignore log files
 *.log
 
-# 忽略 Docker 自己的檔案（避免循環）
+# Ignore Docker's own files (avoid recursion)
 .dockerignore
 Dockerfile
 .dockerfile
 
-# 忽略其他常見的臨時檔案或輸出
+# Ignore other common temporary files or outputs
 *.tmp
 *.bak
 *.swp
 *.swo
 
-# 忽略敏感信息（如果有）
+# Ignore sensitive information (if any)
 *.pem
 *.crt
 *.key
-
-# 忽略資料庫檔案
-main.db
-*.db

@@ -1,9 +1,9 @@
 <%- contentFor('body') %>
 <div class="w-full">
-  <h1 class="text-3xl font-bold mb-4">Subaccount Management</h1>
+  <h1 class="text-3xl font-bold mb-4">Operator Management</h1>
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
-      <!-- Add Subaccount Form -->
+      <!-- Add Operator Form -->
       <form id="operatorForm" action="/settings/operators" method="POST" class="space-y-4">
         <div class="form-control">
           <label class="label">
@@ -20,12 +20,12 @@
         </div>
         
         <div class="form-control mt-6">
-          <button class="btn btn-primary">Add Subaccount</button>
+          <button class="btn btn-primary">Add Operator</button>
         </div>
       </form>
 
-      <!-- Subaccount List -->
-      <div class="divider">Created Subaccounts</div>
+      <!-- Operator List -->
+      <div class="divider">Created Operators</div>
       <div class="overflow-x-auto">
         <table class="table">
           <thead>

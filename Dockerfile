@@ -1,33 +1,36 @@
-# 使用 Node.js 18 作為基礎映像
+# Use Node.js 18 as base image
 FROM node:20.18-slim
 
-# 設定工作目錄
+# Set working directory
 WORKDIR /app
 
-# 安裝 pnpm
+# Install pnpm
 RUN npm install -g pnpm
 
-# 複製 package.json 和 pnpm-lock.yaml (如果有的話)
+# Copy package.json and pnpm-lock.yaml (if exists)
 COPY package*.json pnpm*.yaml ./
 
-# 使用 pnpm 安裝相依套件
+# Install dependencies using pnpm
 RUN pnpm install
 
-# 確保 app 目錄的權限正確
-RUN chown -R node:node /app
-
-# 切換到非 root 使用者
-USER node
-
-# 複製專案檔案
+# Copy project files
 COPY . .
 
-# 設定環境變數
+# Create database directory and set permissions
+RUN mkdir -p /app/database && \
+    chown -R node:node /app && \
+    chmod -R 755 /app && \
+    chmod 777 /app/database
+
+# Switch to non-root user
+USER node
+
+# Set environment variables
 ENV NODE_ENV=production
 ENV TZ=Asia/Taipei
 
-# 開放 PORT
+# Expose port
 EXPOSE 5000
 
-# 使用 pnpm 啟動應用程式
+# Start application using pnpm
 CMD ["pnpm", "start"]
