@@ -72,7 +72,7 @@ const containerId = document.getElementById('containerId');
 const submitBtn = document.getElementById('submitBtn');
 const containers = <%- JSON.stringify(containers) %>;
 
-// 選擇容器時填充表單
+// When selecting a container, fill out the form
 containerSelect.addEventListener('change', function() {
   const selectedId = this.value;
   if (!selectedId) {
@@ -88,10 +88,10 @@ containerSelect.addEventListener('change', function() {
   }
 });
 
-// 填充表單
+// Fill out the form
 function fillForm(container) {
   containerId.value = container.id;
-  const fields = ['host', 'container_name', 'host_name', 'username', 'ssh_key', 'tags']; // 添加 username
+  const fields = ['host', 'container_name', 'host_name', 'username', 'ssh_key', 'tags']; // Add username
   fields.forEach(field => {
     const input = containerForm.elements[field];
     if (input) {

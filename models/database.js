@@ -1,14 +1,43 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
-// 修改資料庫路徑為絕對路徑
-const dbPath = path.join(__dirname, '../main.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Database creation error:', err);
-    }
-});
+// 調整資料庫路徑到容器內的固定位置
+const dbDir = process.env.NODE_ENV === 'production' ? '/app/database' : path.join(__dirname, '../database');
+const dbPath = path.join(dbDir, 'main.db');
+
+// 定義 db 變數但不立即初始化
+let db;
+
+// 初始化資料庫連線
+function initDatabaseConnection() {
+    return new Promise((resolve, reject) => {
+        try {
+            // 確保目錄存在
+            if (!fs.existsSync(dbDir)) {
+                fs.mkdirSync(dbDir, { recursive: true, mode: 0o755 });
+            }
+
+            // 檢查目錄權限
+            fs.accessSync(dbDir, fs.constants.W_OK);
+
+            // 建立資料庫連線
+            db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+                if (err) {
+                    console.error('Database creation error:', err);
+                    reject(err);
+                } else {
+                    console.log('Database connection established at:', dbPath);
+                    resolve(db);
+                }
+            });
+        } catch (error) {
+            console.error('Database directory error:', error);
+            reject(error);
+        }
+    });
+}
 
 function checkAndCreateTable(tableName, schema) {
     return new Promise((resolve, reject) => {
@@ -28,83 +57,87 @@ function checkAndCreateTable(tableName, schema) {
 }
 
 function initDatabase() {
-    const usersSchema = `(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT,
-        role TEXT DEFAULT 'admin'
-    )`;
+    // 先初始化資料庫連線
+    return initDatabaseConnection()
+        .then(() => {
+            const usersSchema = `(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT,
+                role TEXT DEFAULT 'admin'
+            )`;
 
-    const containersSchema = `(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        host TEXT NOT NULL,
-        container_name TEXT NOT NULL,
-        host_name TEXT NOT NULL,
-        username TEXT NOT NULL DEFAULT 'root',
-        ssh_key TEXT NOT NULL,
-        tags TEXT DEFAULT '',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`;
+            const containersSchema = `(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                host TEXT NOT NULL,
+                container_name TEXT NOT NULL,
+                host_name TEXT NOT NULL,
+                username TEXT NOT NULL DEFAULT 'root',
+                ssh_key TEXT NOT NULL,
+                tags TEXT DEFAULT '',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`;
 
-    const operatorsSchema = `(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`;
+            const operatorsSchema = `(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`;
 
-    // 檢查是否需要更新表結構
-    const updateContainersTable = () => {
-        return new Promise((resolve, reject) => {
-            db.get("PRAGMA table_info(containers)", (err, rows) => {
-                if (err) return reject(err);
+            // Check if table structure needs updating
+            const updateContainersTable = () => {
+                return new Promise((resolve, reject) => {
+                    db.get("PRAGMA table_info(containers)", (err, rows) => {
+                        if (err) return reject(err);
 
-                // 檢查是否已存在 username 欄位
-                db.get("SELECT * FROM sqlite_master WHERE type='table' AND name='containers' AND sql LIKE '%username%'", (err, row) => {
-                    if (err) return reject(err);
-                    if (!row) {
-                        // 新增 username 欄位
-                        db.run("ALTER TABLE containers ADD COLUMN username TEXT NOT NULL DEFAULT 'root'", (err) => {
+                        // Check if the username field already exists
+                        db.get("SELECT * FROM sqlite_master WHERE type='table' AND name='containers' AND sql LIKE '%username%'", (err, row) => {
                             if (err) return reject(err);
-                            resolve();
-                        });
-                    } else {
-                        resolve();
-                    }
-                });
-            });
-        });
-    };
-
-    const setupAdminUser = () => {
-        return new Promise((resolve, reject) => {
-            const hashedPassword = bcrypt.hashSync("admin", 10);
-            db.get("SELECT * FROM users WHERE username = ?", ["admin"], (err, row) => {
-                if (err) return reject(err);
-                
-                if (!row) {
-                    db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
-                        ["admin", hashedPassword], (err) => {
-                            if (err) reject(err);
-                            else {
-                                console.log('Admin user created');
+                            if (!row) {
+                                // Add username field
+                                db.run("ALTER TABLE containers ADD COLUMN username TEXT NOT NULL DEFAULT 'root'", (err) => {
+                                    if (err) return reject(err);
+                                    resolve();
+                                });
+                            } else {
                                 resolve();
                             }
                         });
-                } else {
-                    console.log('Admin user exists');
-                    resolve();
-                }
-            });
-        });
-    };
+                    });
+                });
+            };
 
-    // 檢查並創建 users 表
-    return checkAndCreateTable('users', usersSchema)
-        .then(() => checkAndCreateTable('operators', operatorsSchema))
-        .then(() => checkAndCreateTable('containers', containersSchema)) // 檢查並創建 containers 表
-        .then(() => updateContainersTable())  // 新增更新表結構的步驟
-        .then(setupAdminUser)
+            const setupAdminUser = () => {
+                return new Promise((resolve, reject) => {
+                    const hashedPassword = bcrypt.hashSync("admin", 10);
+                    db.get("SELECT * FROM users WHERE username = ?", ["admin"], (err, row) => {
+                        if (err) return reject(err);
+
+                        if (!row) {
+                            db.run("INSERT INTO users (username, password) VALUES (?, ?)",
+                                ["admin", hashedPassword], (err) => {
+                                    if (err) reject(err);
+                                    else {
+                                        console.log('Admin user created');
+                                        resolve();
+                                    }
+                                });
+                        } else {
+                            console.log('Admin user exists');
+                            resolve();
+                        }
+                    });
+                });
+            };
+
+            // Check and create users table
+            return checkAndCreateTable('users', usersSchema)
+                .then(() => checkAndCreateTable('operators', operatorsSchema))
+                .then(() => checkAndCreateTable('containers', containersSchema)) // Check and create containers table
+                .then(() => updateContainersTable())  // Add step to update table structure
+                .then(setupAdminUser);
+        })
         .then(() => {
             console.log('Database initialization completed');
         })
@@ -114,7 +147,7 @@ function initDatabase() {
         });
 }
 
-// 驗證使用者
+// Verify user
 function verifyUser(username, password) {
     return new Promise((resolve, reject) => {
         db.get("SELECT * FROM users WHERE username = ?", [username], (err, row) => {
@@ -136,7 +169,7 @@ function verifyUser(username, password) {
     });
 }
 
-// 重設管理員密碼
+// Reset admin password
 function resetAdmin() {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync("admin", 10);
@@ -146,7 +179,7 @@ function resetAdmin() {
                 reject(err);
                 return;
             }
-            db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
+            db.run("INSERT INTO users (username, password) VALUES (?, ?)",
                 ["admin", hashedPassword], (err) => {
                     if (err) {
                         console.error('Insert admin error:', err);
@@ -159,7 +192,7 @@ function resetAdmin() {
     });
 }
 
-// 使用新密碼重設管理員密碼
+// Reset admin password with a new password
 function resetAdminWithNewPassword(newPassword) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
@@ -169,7 +202,7 @@ function resetAdminWithNewPassword(newPassword) {
                 reject(err);
                 return;
             }
-            db.run("INSERT INTO users (username, password) VALUES (?, ?)", 
+            db.run("INSERT INTO users (username, password) VALUES (?, ?)",
                 ["admin", hashedPassword], (err) => {
                     if (err) {
                         console.error('Insert admin error:', err);
@@ -182,25 +215,26 @@ function resetAdminWithNewPassword(newPassword) {
     });
 }
 
-// 新增容器相關的函數
+// Add container related functions
 function addContainer(container) {
     return new Promise((resolve, reject) => {
-        // 檢查必要欄位
+        // Check required fields
         if (!container.host || !container.container_name || !container.host_name || !container.ssh_key) {
-            console.error('欄位驗證失敗:', container);
-            return reject(new Error('缺少必要欄位'));
+            console.error('Field validation failed:', container);
+            return reject(new Error('Missing required fields'));
         }
 
-        // 設定預設值
+        // Set default values
         const username = container.username || 'root';
         const tags = container.tags || '';
 
         db.run(
             `INSERT INTO containers (host, container_name, host_name, username, ssh_key, tags) 
              VALUES (?, ?, ?, ?, ?, ?)`,
+
             [
-                container.host, 
-                container.container_name, 
+                container.host,
+                container.container_name,
                 container.host_name,
                 username,
                 container.ssh_key,
@@ -208,7 +242,7 @@ function addContainer(container) {
             ],
             function(err) {
                 if (err) {
-                    console.error('新增容器時發生錯誤:', err);
+                    console.error('Error adding container:', err);
                     reject(err);
                 } else {
                     resolve(this.lastID);
@@ -258,7 +292,7 @@ function updateContainer(id, container) {
                 container.host,
                 container.container_name,
                 container.host_name,
-                container.username,  // 新增字段
+                container.username,  // Add field
                 container.ssh_key,
                 container.tags,
                 id
@@ -271,7 +305,7 @@ function updateContainer(id, container) {
     });
 }
 
-// 新增 operator 相關函數
+// Add operator related functions
 function addOperator(username, password) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -295,7 +329,7 @@ function getAllOperators() {
     });
 }
 
-// 更新操作員密碼
+// Update operator password
 function updateOperatorPassword(id, newPassword) {
     return new Promise((resolve, reject) => {
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
@@ -310,7 +344,7 @@ function updateOperatorPassword(id, newPassword) {
     });
 }
 
-// 刪除操作員
+// Delete operator
 function deleteOperator(id) {
     return new Promise((resolve, reject) => {
         db.run("DELETE FROM operators WHERE id = ?", [id], function(err) {
@@ -323,13 +357,13 @@ function deleteOperator(id) {
 module.exports = {
     initDatabase,
     verifyUser,
-    resetAdmin,  // 導出重設函數
+    resetAdmin,
     resetAdminWithNewPassword,
     addContainer,
     getAllContainers,
     getContainer,
-    getAllTags, // 新增這一行
-    updateContainer,  // 添加這行
+    getAllTags,
+    updateContainer,
     addOperator,
     getAllOperators,
     updateOperatorPassword,

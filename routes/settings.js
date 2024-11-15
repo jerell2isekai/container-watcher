@@ -8,10 +8,10 @@ const {
   getAllOperators, 
   updateOperatorPassword, 
   deleteOperator,
-  resetAdminWithNewPassword  // 新增這行
+  resetAdminWithNewPassword  // Add this line
 } = require('../models/database');
 
-// 管理員權限中間件
+// Admin privileges middleware
 const adminRequired = (req, res, next) => {
   if (req.session.role !== 'admin') {
     return res.status(403).redirect('/watcher');
@@ -27,14 +27,14 @@ router.get('/', async (req, res) => {
   });
 });
 
-// 新增容器頁面
+// New container page
 router.get('/new', adminRequired, (req, res) => {
   res.render('settings/new', {
     path: '/settings/new'
   });
 });
 
-// 修改容器頁面
+// Modify container page
 router.get('/modify', adminRequired, async (req, res) => {
   const containers = await getAllContainers();
   res.render('settings/modify', {
@@ -59,44 +59,44 @@ router.post('/container', async (req, res) => {
   }
 });
 
-// 更新容器
+// Update container
 router.post('/container/update', async (req, res) => {
   try {
-    console.log('Updating container with data:', req.body); // 新增除錯日誌
+    console.log('Updating container with data:', req.body); // Add debug log
 
     const { id, host, container_name, host_name, username, ssh_key, tags } = req.body;
 
-    // 檢查必要欄位
+    // Check required fields
     if (!id || !host || !container_name || !host_name || !username || !ssh_key) {
       console.error('Missing required fields:', { id, host, container_name, host_name, username });
       return res.status(400).send('Missing required fields');
     }
 
-    // 更新容器
+    // Update container
     const result = await updateContainer(id, {
       host,
       container_name,
       host_name,
       username,
       ssh_key,
-      tags: tags || ''  // 確保 tags 不會是 undefined
+      tags: tags || ''  // Ensure tags is not undefined
     });
 
-    console.log('Update result:', result); // 新增除錯日誌
+    console.log('Update result:', result); // Add debug log
 
     if (result === 0) {
-      // 如果沒有更新任何行
+      // If no rows were updated
       return res.status(404).send('Container not found');
     }
 
     res.redirect('/settings/modify');
   } catch (error) {
-    console.error('Error updating container:', error); // 新增詳細錯誤日誌
+    console.error('Error updating container:', error); // Add detailed error log
     res.status(500).send(`Error updating container: ${error.message}`);
   }
 });
 
-// 管理員設定頁面
+// Admin settings page
 router.get('/admin', adminRequired, (req, res) => {
   res.render('settings/admin', {
     path: '/settings/admin',
@@ -104,30 +104,30 @@ router.get('/admin', adminRequired, (req, res) => {
   });
 });
 
-// 重設管理員密碼
+// Reset admin password
 router.post('/admin/reset-password', adminRequired, async (req, res) => {
   try {
     const { newPassword, confirmPassword } = req.body;
     
-    // 驗證密碼
+    // Validate password
     if (!newPassword || newPassword.length < 5) {
-      return res.redirect('/settings/admin?error=密碼長度至少需要5個字元');
+      return res.redirect('/settings/admin?error=The password must be at least 5 characters long');
     }
     
     if (newPassword !== confirmPassword) {
-      return res.redirect('/settings/admin?error=兩次輸入的密碼不相同');
+      return res.redirect('/settings/admin?error=The passwords entered do not match');
     }
 
     await resetAdminWithNewPassword(newPassword);
-    // 直接導向登出
+    // Redirect directly to logout
     res.redirect('/logout');
   } catch (error) {
-    console.error('變更管理員密碼失敗:', error);
-    res.redirect('/settings/admin?error=變更管理員密碼失敗');
+    console.error('Failed to change admin password:', error);
+    res.redirect('/settings/admin?error=Failed to change admin password');
   }
 });
 
-// 子帳號管理路由
+// Operator management routes
 router.get('/operators', adminRequired, async (req, res) => {
   const operators = await getAllOperators();
   res.render('settings/operators', {
@@ -146,30 +146,30 @@ router.post('/operators', adminRequired, async (req, res) => {
   }
 });
 
-// 更新操作員密碼
+// Update operator password
 router.post('/operators/change-password', adminRequired, async (req, res) => {
   try {
     const { operatorId, newPassword } = req.body;
     await updateOperatorPassword(operatorId, newPassword);
     res.redirect('/settings/operators');
   } catch (error) {
-    console.error('密碼更新失敗:', error);
-    res.status(500).send('密碼更新失敗');
+    console.error('Password update failed:', error);
+    res.status(500).send('Password update failed');
   }
 });
 
-// 刪除操作員
+// Delete operator
 router.delete('/operators/:id', adminRequired, async (req, res) => {
   try {
     const result = await deleteOperator(req.params.id);
     if (result === 0) {
-      res.status(404).send('操作員不存在');
+      res.status(404).send('Operator does not exist');
     } else {
       res.sendStatus(200);
     }
   } catch (error) {
-    console.error('刪除操作員失敗:', error);
-    res.status(500).send('刪除操作員失敗');
+    console.error('Failed to delete operator:', error);
+    res.status(500).send('Failed to delete operator');
   }
 });
 

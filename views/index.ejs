@@ -5,8 +5,9 @@
   <title>Login - Docker Logs Viewer</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" /> <!-- Added Font Awesome -->
   <script>
-    // 用於顯示錯誤訊息
+    // Used to display error messages
     function showError(message) {
         const errorDiv = document.getElementById('error-message');
         errorDiv.textContent = message;
@@ -19,7 +20,7 @@
     <div class="card-body">
       <h2 class="card-title justify-center mb-4">Docker Logs Viewer</h2>
       
-      <!-- 錯誤訊息區域 -->
+      <!-- Error message area -->
       <div id="error-message" class="alert alert-error hidden"></div>
       
       <form action="/login" method="POST" id="loginForm">
@@ -40,7 +41,7 @@
         </div>
       </form>
       
-      <!-- 加入錯誤訊息顯示 -->
+      <!-- Add error message display -->
       <% if (typeof error !== 'undefined' && error) { %>
         <div class="alert alert-error mt-4">
           <% if (error === '1') { %>
@@ -50,11 +51,23 @@
           <% } %>
         </div>
       <% } %>
+      
+      <!-- Copyright text -->
+      <span class="text-center text-sm text-gray-500 mt-4">© 2024 Docker Logs Viewer by Jerell Kuo. 
+        <p>All rights reserved.</p>
+      </span>
+
+      <!-- GitHub link with icon -->
+      <div class="text-center mt-2">
+        <a href="https://github.com/jerell2isekai/container-watcher" target="_blank" class="link link-hover">
+          <i class="fab fa-github fa-lg"></i> <!-- GitHub icon -->
+        </a>
+      </div>
     </div>
   </div>
 
   <script>
-    // 表單提交處理
+    // Form submission handling
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
