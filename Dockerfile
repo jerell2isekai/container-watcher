@@ -1,4 +1,4 @@
-# Use Node.js 18 as base image
+# Use Node.js 20.18 as base image
 FROM node:20.18-slim
 
 # Set working directory
