@@ -1282,6 +1282,7 @@ snapshots:
   foxnine-monitor@file:(encoding@0.1.13):
     dependencies:
       bcrypt: 5.1.1(encoding@0.1.13)
+      dotenv: 16.4.5
       ejs: 3.1.10
       express: 4.21.1
       express-ejs-layouts: 2.5.1
