@@ -28,6 +28,7 @@ USER node
 # Set environment variables
 ENV NODE_ENV=production
 ENV TZ=Asia/Taipei
+ENV SESSION_SECRET=${SESSION_SECRET}
 
 # Expose port
 EXPOSE 5000

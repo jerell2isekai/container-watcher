@@ -47,3 +47,5 @@ Container Watcher supports installation methods: Docker containerized deployment
 ### Prerequisites
 
 * docker and docker-compose installed on your system
+
+* Before using docker-compose, make sure to set your SESSION_SECRET variable in the docker-compose.yml file
